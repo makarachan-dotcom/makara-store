@@ -5,12 +5,14 @@ import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
+import OrderStatusSteps from '@/components/orders/OrderStatusSteps'
 
 interface OrderItem {
   id: string
   productId: string
   quantity: number
   price: number
+  product?: { nameKm: string; nameEn: string; image: string | null }
 }
 
 interface Order {
@@ -135,11 +137,19 @@ export default function PurchaseHistoryPage() {
                   </span>
                 </div>
 
-                <div className="border-t border-white/5 pt-3 space-y-2">
+                {/* Step-by-step status */}
+                <div className="border-t border-white/5 pt-3">
+                  <OrderStatusSteps currentStatus={order.status} locale={locale} />
+                </div>
+
+                <div className="border-t border-white/5 pt-3 mt-3 space-y-2">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-white/60">
-                        {item.productId} x{item.quantity}
+                        {item.product
+                          ? (locale === 'km' ? item.product.nameKm : item.product.nameEn)
+                          : item.productId}
+                        {' '}x{item.quantity}
                       </span>
                       <span className="text-gold">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
@@ -148,7 +158,7 @@ export default function PurchaseHistoryPage() {
 
                 <div className="border-t border-white/5 pt-3 mt-3 flex justify-between">
                   <span className="text-white/60 font-khmer text-sm">
-                    {locale === 'km' ? 'សរុប' : 'Total'}
+                    {locale === 'km' ? '\u179f\u179a\u17bb\u1794' : 'Total'}
                   </span>
                   <span className="text-gold font-bold">${order.totalAmount.toFixed(2)}</span>
                 </div>

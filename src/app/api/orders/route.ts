@@ -19,7 +19,10 @@ export async function GET() {
   const isAdmin = isAdminUser(session.user as { email?: string; role?: string })
   const orders = await prisma.order.findMany({
     where: isAdmin ? {} : { userId: user.id },
-    include: { items: true, user: { select: { name: true, email: true } } },
+    include: {
+      items: { include: { product: { select: { nameKm: true, nameEn: true, image: true } } } },
+      user: { select: { name: true, email: true } },
+    },
     orderBy: { createdAt: 'desc' },
   })
 
