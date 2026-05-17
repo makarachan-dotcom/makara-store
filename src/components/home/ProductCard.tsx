@@ -32,7 +32,10 @@ export default function ProductCard({
 }: ProductCardProps) {
   const { t, locale } = useTranslation()
   const addToCart = useStore((s) => s.addToCart)
+  const toggleFavorite = useStore((s) => s.toggleFavorite)
+  const isFavorite = useStore((s) => s.isFavorite)
   const name = locale === 'km' ? nameKm : nameEn
+  const favorited = isFavorite(id)
 
   const statusColors: Record<string, string> = {
     IN_STOCK: 'text-green-400',
@@ -59,6 +62,12 @@ export default function ProductCard({
       image: image || '/images/logo.jpg',
       quantity: 1,
     })
+  }
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleFavorite(id)
   }
 
   return (
@@ -90,6 +99,26 @@ export default function ProductCard({
               -{Math.round(((originalPrice - price) / originalPrice) * 100)}%
             </div>
           )}
+
+          {/* Favorite Heart Button */}
+          <button
+            onClick={handleToggleFavorite}
+            className="absolute bottom-2 right-2 z-10 w-10 h-10 flex items-center justify-center
+                       rounded-full bg-obsidian/60 backdrop-blur-sm border border-white/10
+                       hover:border-red-400/40 transition-all duration-200"
+          >
+            <svg
+              className={`w-6 h-6 transition-colors duration-200 ${
+                favorited ? 'text-red-500 fill-red-500' : 'text-white/50 hover:text-red-400'
+              }`}
+              fill={favorited ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
 
           {/* Overlay ប៊ូតុង */}
           <div className="absolute inset-0 bg-gradient-to-t from-obsidian/80 via-transparent to-transparent
