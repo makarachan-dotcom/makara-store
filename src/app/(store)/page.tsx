@@ -1,13 +1,13 @@
 'use client'
 
 // ទំព័រដើម - Homepage
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import HeroBanner from '@/components/home/HeroBanner'
 import ProductCard from '@/components/home/ProductCard'
 import PaymentBanner from '@/components/home/PaymentBanner'
 import { useTranslation } from '@/hooks/useTranslation'
 
-// ទិន្នន័យគំរូ (នឹងត្រូវជំនួសដោយ API)
 const sampleProducts = [
   {
     id: '1',
@@ -96,6 +96,17 @@ const sampleProducts = [
 
 export default function HomePage() {
   const { t, locale } = useTranslation()
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return sampleProducts
+    const q = searchQuery.toLowerCase()
+    return sampleProducts.filter(
+      (p) => p.nameKm.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q) || p.slug.includes(q)
+    )
+  }, [searchQuery])
+
+  const featuredProducts = useMemo(() => filteredProducts.filter((p) => p.isFeatured), [filteredProducts])
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -116,21 +127,39 @@ export default function HomePage() {
         {/* Hero Banner */}
         <HeroBanner />
 
+        {/* ស្វែងរកផលិតផល */}
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={locale === 'km' ? 'ស្វែងរកផលិតផល...' : 'Search products...'}
+            className="w-full bg-obsidian-50/80 border border-neon/20 rounded-xl px-4 py-3 pl-10
+                       text-white placeholder-white/30 focus:outline-none focus:border-neon/50
+                       backdrop-blur-sm transition-colors"
+          />
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
         {/* ការជូនដំណឹង */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-xl border border-neon/20 bg-obsidian-50/50 px-4 py-3"
-        >
-          <div className="flex items-center gap-3">
-            <span className="flex-shrink-0 w-2 h-2 bg-neon rounded-full animate-pulse" />
-            <p className="text-sm text-white/60 font-khmer truncate">
-              {locale === 'km'
-                ? '🎮 សូមស្វាគមន៍មកកាន់ Makara Store! ទិញផលិតផលឌីជីថលជាមួយតម្លៃពិសេស។'
-                : '🎮 Welcome to Makara Store! Buy digital products at special prices.'}
-            </p>
-          </div>
-        </motion.div>
+        {!searchQuery && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-xl border border-neon/20 bg-obsidian-50/50 px-4 py-3"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex-shrink-0 w-2 h-2 bg-neon rounded-full animate-pulse" />
+              <p className="text-sm text-white/60 font-khmer truncate">
+                {locale === 'km'
+                  ? '🎮 សូមស្វាគមន៍មកកាន់ Makara Store! ទិញផលិតផលឌីជីថលជាមួយតម្លៃពិសេស។'
+                  : '🎮 Welcome to Makara Store! Buy digital products at special prices.'}
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* ផលិតផលពិសេស */}
         <section>
@@ -153,13 +182,11 @@ export default function HomePage() {
             animate="visible"
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            {sampleProducts
-              .filter((p) => p.isFeatured)
-              .map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard {...product} />
-                </motion.div>
-              ))}
+            {featuredProducts.map((product) => (
+              <motion.div key={product.id} variants={itemVariants}>
+                <ProductCard {...product} />
+              </motion.div>
+            ))}
           </motion.div>
         </section>
 
@@ -178,7 +205,7 @@ export default function HomePage() {
             animate="visible"
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            {sampleProducts.map((product) => (
+            {filteredProducts.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
                 <ProductCard {...product} />
               </motion.div>

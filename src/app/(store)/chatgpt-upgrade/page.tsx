@@ -1,7 +1,7 @@
 'use client'
 
 // ទំព័រដំឡើង ChatGPT
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
@@ -21,6 +21,14 @@ export default function ChatGPTUpgradePage() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const addToCart = useStore((s) => s.addToCart)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlan(planId)
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
 
   const handleSubmitOrder = async () => {
     if (!selectedPlan || !email || !password) {
@@ -88,7 +96,7 @@ export default function ChatGPTUpgradePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              onClick={() => setSelectedPlan(plan.id)}
+              onClick={() => handleSelectPlan(plan.id)}
               className={`card-gaming p-6 text-left transition-all ${
                 selectedPlan === plan.id
                   ? 'border-neon shadow-[0_0_20px_rgba(0,242,254,0.2)]'
@@ -133,6 +141,7 @@ export default function ChatGPTUpgradePage() {
         {/* ទម្រង់ព័ត៌មានគណនី */}
         {selectedPlan && (
           <motion.div
+            ref={formRef}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-md mx-auto card-gaming p-6"

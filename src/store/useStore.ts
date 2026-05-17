@@ -44,10 +44,15 @@ interface StoreState {
   hasSeenIntro: boolean
   setHasSeenIntro: (seen: boolean) => void
 
-  // Favorites
+  // Favorites (optimistic UI with DB sync)
   favorites: string[]
+  setFavorites: (ids: string[]) => void
   toggleFavorite: (productId: string) => void
   isFavorite: (productId: string) => boolean
+
+  // Privacy policy
+  privacyAgreed: boolean
+  setPrivacyAgreed: (agreed: boolean) => void
 
   // UI State
   isMobileMenuOpen: boolean
@@ -106,15 +111,28 @@ export const useStore = create<StoreState>()(
       hasSeenIntro: false,
       setHasSeenIntro: (seen) => set({ hasSeenIntro: seen }),
 
-      // Favorites
+      // Favorites (optimistic UI with DB sync)
       favorites: [],
-      toggleFavorite: (productId) =>
-        set((state) => ({
-          favorites: state.favorites.includes(productId)
-            ? state.favorites.filter((id) => id !== productId)
-            : [...state.favorites, productId],
-        })),
+      setFavorites: (ids) => set({ favorites: ids }),
+      toggleFavorite: (productId) => {
+        const prev = get().favorites
+        const next = prev.includes(productId)
+          ? prev.filter((id) => id !== productId)
+          : [...prev, productId]
+        set({ favorites: next })
+        fetch('/api/favorites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId }),
+        }).catch(() => {
+          set({ favorites: prev })
+        })
+      },
       isFavorite: (productId) => get().favorites.includes(productId),
+
+      // Privacy policy
+      privacyAgreed: false,
+      setPrivacyAgreed: (agreed) => set({ privacyAgreed: agreed }),
 
       // UI State
       isMobileMenuOpen: false,
@@ -129,6 +147,7 @@ export const useStore = create<StoreState>()(
         theme: state.theme,
         cart: state.cart,
         favorites: state.favorites,
+        privacyAgreed: state.privacyAgreed,
         hasSeenIntro: state.hasSeenIntro,
       }),
     }

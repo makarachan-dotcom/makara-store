@@ -2,6 +2,7 @@
 
 // ទំព័រព័ត៌មានផលិតផល
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -10,6 +11,7 @@ import { useStore } from '@/store/useStore'
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { t, locale } = useTranslation()
   const addToCart = useStore((s) => s.addToCart)
+  const router = useRouter()
   const [quantity, setQuantity] = useState(1)
 
   // ទិន្នន័យគំរូ (នឹងត្រូវជំនួសដោយ API)
@@ -39,6 +41,17 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       image: product.image,
       quantity,
     })
+  }
+
+  const handleBuyNow = () => {
+    addToCart({
+      productId: product.id,
+      name,
+      price: product.price,
+      image: product.image,
+      quantity,
+    })
+    router.push('/checkout')
   }
 
   return (
@@ -133,7 +146,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <button onClick={handleAddToCart} className="flex-1 btn-neon">
                 {t('addToCart')}
               </button>
-              <button className="flex-1 btn-gold">
+              <button onClick={handleBuyNow} className="flex-1 btn-gold">
                 {t('buyNow')}
               </button>
             </div>

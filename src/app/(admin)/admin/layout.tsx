@@ -5,7 +5,7 @@ import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { SessionProvider } from 'next-auth/react'
 
 const adminLinks = [
   { href: '/admin/dashboard', label: 'ផ្ទាំងព័ត៌មាន', labelEn: 'Dashboard', icon: '📊' },
@@ -21,6 +21,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
+    <SessionProvider>
     <div className="min-h-screen bg-obsidian flex">
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 
@@ -85,5 +86,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
     </div>
+    </SessionProvider>
   )
 }
