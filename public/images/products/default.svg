@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="24" fill="#1a1a2e"/>
+  <g transform="translate(100,100)">
+    <rect x="20" y="20" width="160" height="160" rx="20" fill="none" stroke="#00f2fe" stroke-width="4" opacity="0.5"/>
+    <path d="M100 60L130 120H70L100 60Z" fill="#FFD700" opacity="0.8"/>
+    <circle cx="100" cy="140" r="20" fill="#00f2fe" opacity="0.6"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" fill="white" font-family="Arial" font-size="24" opacity="0.5">MAKARA STORE</text>
+</svg>

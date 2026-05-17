@@ -7,6 +7,7 @@ import HeroBanner from '@/components/home/HeroBanner'
 import ProductCard from '@/components/home/ProductCard'
 import PaymentBanner from '@/components/home/PaymentBanner'
 import { useTranslation } from '@/hooks/useTranslation'
+import { getProductImage } from '@/lib/product-images'
 
 interface Product {
   id: string
@@ -128,7 +129,7 @@ export default function HomePage() {
             >
               {featuredProducts.map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard {...product} image={product.image || '/images/logo.jpg'} originalPrice={product.originalPrice ?? undefined} />
+                  <ProductCard {...product} image={getProductImage(product.nameEn || product.slug, product.image)} originalPrice={product.originalPrice ?? undefined} />
                 </motion.div>
               ))}
             </motion.div>
@@ -161,7 +162,7 @@ export default function HomePage() {
             >
               {filteredProducts.map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <ProductCard {...product} image={product.image || '/images/logo.jpg'} originalPrice={product.originalPrice ?? undefined} />
+                  <ProductCard {...product} image={getProductImage(product.nameEn || product.slug, product.image)} originalPrice={product.originalPrice ?? undefined} />
                 </motion.div>
               ))}
             </motion.div>

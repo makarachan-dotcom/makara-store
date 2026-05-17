@@ -3,6 +3,7 @@
 // ទំព័របង់ប្រាក់ - Checkout
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -20,7 +21,8 @@ const banks: { id: Bank; name: string; color: string }[] = [
 export default function CheckoutPage() {
   const { t, locale } = useTranslation()
   const { cart, getCartTotal, clearCart } = useStore()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null)
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -28,6 +30,12 @@ export default function CheckoutPage() {
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [orderCreated, setOrderCreated] = useState(false)
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     const dismissed = localStorage.getItem('makara-privacy-agreed')

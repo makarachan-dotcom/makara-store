@@ -40,12 +40,12 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-  }
-
   try {
+    const session = await getServerSession(authOptions)
+    if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const body = await request.json()
 
     for (const [key, value] of Object.entries(body)) {
@@ -61,7 +61,8 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({ settings: result })
-  } catch {
+  } catch (error) {
+    console.error('Error updating settings:', error)
     return NextResponse.json(
       { error: 'កំហុសក្នុងការកែប្រែការកំណត់។ Error updating settings.' },
       { status: 500 }

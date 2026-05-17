@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
+import { getProductImage } from '@/lib/product-images'
 
 interface ProductCardProps {
   id: string
@@ -35,6 +36,7 @@ export default function ProductCard({
   const toggleFavorite = useStore((s) => s.toggleFavorite)
   const isFavorite = useStore((s) => s.isFavorite)
   const name = locale === 'km' ? nameKm : nameEn
+  const resolvedImage = getProductImage(nameEn || slug, image)
   const favorited = isFavorite(id)
 
   const statusColors: Record<string, string> = {
@@ -59,7 +61,7 @@ export default function ProductCard({
       productId: id,
       name,
       price,
-      image: image || '/images/logo.jpg',
+      image: resolvedImage,
       quantity: 1,
     })
   }
@@ -79,7 +81,7 @@ export default function ProductCard({
         {/* រូបភាព */}
         <div className="relative aspect-square overflow-hidden bg-obsidian-100">
           <Image
-            src={image || '/images/logo.jpg'}
+            src={resolvedImage}
             alt={name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
