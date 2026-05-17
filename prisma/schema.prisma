@@ -1,0 +1,327 @@
+// គម្រោង Prisma Schema សម្រាប់ Makara Store
+// មូលដ្ឋានទិន្នន័យ PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ផ្នែកផ្ទៀងផ្ទាត់អត្តសញ្ញាណ =====
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          UserRole  @default(USER)
+  locale        String    @default("km")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  favorites     Favorite[]
+  chatMessages  ChatMessage[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// ===== ផ្នែកផលិតផល =====
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  nameKm      String    // ឈ្មោះជាភាសាខ្មែរ
+  nameEn      String    // ឈ្មោះជាភាសាអង់គ្លេស
+  icon        String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  nameKm          String   // ឈ្មោះផលិតផលជាភាសាខ្មែរ
+  nameEn          String   // ឈ្មោះផលិតផលជាភាសាអង់គ្លេស
+  descriptionKm   String?  @db.Text  // ការពិពណ៌នាជាភាសាខ្មែរ
+  descriptionEn   String?  @db.Text  // ការពិពណ៌នាជាភាសាអង់គ្លេស
+  price           Float
+  originalPrice   Float?
+  currency        String   @default("USD")
+  image           String?
+  images          String[] // រូបភាពបន្ថែម
+  categoryId      String
+  stockStatus     StockStatus @default(IN_STOCK)
+  stockQuantity   Int      @default(0)
+  isFeatured      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  sourceUrl       String?  // URL ពីគេហទំព័រដើម (vipplus.pro)
+  sourceId        String?  @unique // ID ពីគេហទំព័រដើម
+  metadata        Json?    // ទិន្នន័យបន្ថែម
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  category        Category @relation(fields: [categoryId], references: [id])
+  orderItems      OrderItem[]
+  favorites       Favorite[]
+
+  @@map("products")
+}
+
+enum StockStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  LOW_STOCK
+  PRE_ORDER
+}
+
+// ===== ផ្នែកការបញ្ជាទិញ =====
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  currency        String      @default("USD")
+  paymentMethod   PaymentMethod?
+  paymentProof    String?     // រូបភាពបង្កាន់ដៃបង់ប្រាក់
+  receiptStatus   ReceiptStatus @default(PENDING)
+  adminNote       String?     @db.Text
+  adjustedAmount  Float?      // ចំនួនទឹកប្រាក់ដែល Admin កែប្រែ
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  quantity    Int     @default(1)
+  price       Float
+  metadata    Json?   // ទិន្នន័យបន្ថែមដូចជា ព័ត៌មានគណនី ChatGPT
+
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAYMENT_UPLOADED
+  PAYMENT_VERIFIED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ABA_BANK
+  ACLEDA_BANK
+  WING_BANK
+}
+
+enum ReceiptStatus {
+  PENDING
+  AI_APPROVED
+  AI_REJECTED
+  ADMIN_APPROVED
+  ADMIN_REJECTED
+}
+
+// ===== ផ្នែកចំណូលចិត្ត =====
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}
+
+// ===== ផ្នែក KHQR =====
+
+model KhqrCode {
+  id          String        @id @default(cuid())
+  bank        PaymentMethod
+  imageUrl    String
+  accountName String?
+  accountNumber String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("khqr_codes")
+}
+
+// ===== ផ្នែកការជូនដំណឹង =====
+
+model Announcement {
+  id          String   @id @default(cuid())
+  titleKm     String
+  titleEn     String
+  contentKm   String   @db.Text
+  contentEn   String   @db.Text
+  type        AnnouncementType @default(INFO)
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  PROMOTION
+  URGENT
+}
+
+// ===== ផ្នែកការកំណត់ Admin =====
+
+model SiteSetting {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       String  @db.Text
+  type        String  @default("string") // string, boolean, json, image
+  description String?
+
+  @@map("site_settings")
+}
+
+model HeroBanner {
+  id          String   @id @default(cuid())
+  imageUrl    String
+  linkUrl     String?
+  titleKm     String?
+  titleEn     String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hero_banners")
+}
+
+// ===== ផ្នែក Chat =====
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String?
+  role      ChatRole
+  content   String   @db.Text
+  sessionId String
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("chat_messages")
+}
+
+enum ChatRole {
+  USER
+  BOT
+  ADMIN
+}
+
+// ===== ផ្នែកវីដេអូណែនាំ =====
+
+model InstructionVideo {
+  id          String   @id @default(cuid())
+  titleKm     String
+  titleEn     String
+  videoUrl    String?
+  thumbnailUrl String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("instruction_videos")
+}
+
+// ===== ផ្នែកកំណត់ហេតុ Scraper =====
+
+model ScraperLog {
+  id          String   @id @default(cuid())
+  status      String
+  itemsFound  Int      @default(0)
+  itemsUpdated Int     @default(0)
+  itemsCreated Int     @default(0)
+  errors      String?  @db.Text
+  duration    Int?     // រយៈពេល (មីលីវិនាទី)
+  createdAt   DateTime @default(now())
+
+  @@map("scraper_logs")
+}

@@ -1,85 +1,96 @@
-import { Link } from "react-router";
-import { useTranslation } from "react-i18next";
-import { Zap, Mail, MessageCircle, Shield } from "lucide-react";
+'use client'
 
-export function Footer() {
-  const { t } = useTranslation();
+// ជើងគេហទំព័រ
+import Link from 'next/link'
+import Image from 'next/image'
+import { useTranslation } from '@/hooks/useTranslation'
+
+export default function Footer() {
+  const { t } = useTranslation()
 
   return (
-    <footer className="bg-[#0A0C10] border-t border-[#141821]">
-      {/* Newsletter */}
-      <div className="max-w-[1400px] mx-auto px-4 py-16 border-b border-[#141821]">
-        <div className="text-center max-w-xl mx-auto">
-          <h3 className="text-2xl font-bold text-[#E8ECF1] mb-2">{t("newsletter.title")}</h3>
-          <div className="flex gap-2 mt-6">
-            <input
-              type="email"
-              placeholder={t("newsletter.placeholder")}
-              className="flex-1 bg-[#141821] border border-[#1A1F2E] rounded-lg py-3 px-4 text-[#E8ECF1] placeholder-[#7A8299] focus:outline-none focus:border-cyan-400/50"
-            />
-            <button className="px-6 py-3 bg-cyan-400 hover:bg-cyan-500 text-[#040507] font-semibold rounded-lg transition-colors">
-              {t("newsletter.subscribe")}
-            </button>
-          </div>
-          <p className="text-xs text-[#7A8299] mt-3">{t("newsletter.privacy")}</p>
-        </div>
-      </div>
-
-      {/* Footer Links */}
-      <div className="max-w-[1400px] mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-cyan-400" />
-              <span className="font-bold text-lg">
-                <span className="text-cyan-400">M</span>AKARA
+    <footer className="border-t border-neon/10 bg-obsidian-100 pb-20 md:pb-0">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* ឡូហ្គោ និង ការពិពណ៌នា */}
+          <div className="md:col-span-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-neon/30">
+                <Image src="/images/logo.jpg" alt="Makara Store" width={40} height={40} className="object-cover" />
+              </div>
+              <span className="font-display font-bold text-lg">
+                <span className="text-neon">MAKARA</span>
+                <span className="text-gold ml-1">STORE</span>
               </span>
             </div>
-            <p className="text-sm text-[#7A8299]">Premium game keys at unbeatable prices. Instant delivery, 24/7 support.</p>
+            <p className="text-white/40 text-sm font-khmer leading-relaxed">
+              {t('siteName')} - Premium Digital Store
+            </p>
           </div>
 
+          {/* តំណភ្ជាប់រហ័ស */}
           <div>
-            <h4 className="font-semibold text-[#E8ECF1] mb-4">{t("footer.store")}</h4>
+            <h3 className="text-neon font-semibold mb-4 font-khmer">{t('products')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/products" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">All Games</Link></li>
-              <li><Link to="/products" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">New Releases</Link></li>
-              <li><Link to="/products" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">Top Sellers</Link></li>
-              <li><Link to="/products" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">On Sale</Link></li>
+              {[
+                { href: '/category/all', label: t('products') },
+                { href: '/chatgpt-upgrade', label: t('chatgptUpgrade') },
+                { href: '/favorites', label: t('favorites') },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-white/40 hover:text-neon text-sm transition-colors font-khmer">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* ជំនួយ */}
           <div>
-            <h4 className="font-semibold text-[#E8ECF1] mb-4">{t("footer.support")}</h4>
+            <h3 className="text-neon font-semibold mb-4 font-khmer">{t('menu')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/instructions" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">{t("instructions.title")}</Link></li>
-              <li><Link to="/chatgpt-upgrade" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">ChatGPT Upgrade</Link></li>
-              <li><Link to="/dashboard" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors">{t("nav.dashboard")}</Link></li>
+              {[
+                { href: '/instructions', label: t('instructions') },
+                { href: '/privacy-policy', label: t('privacyPolicy') },
+                { href: '/api-key', label: t('apiKey') },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-white/40 hover:text-neon text-sm transition-colors font-khmer">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* ទំនាក់ទំនង */}
           <div>
-            <h4 className="font-semibold text-[#E8ECF1] mb-4">{t("footer.legal")}</h4>
+            <h3 className="text-neon font-semibold mb-4 font-khmer">{t('contactAdmin')}</h3>
             <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors flex items-center gap-1"><Shield className="w-3 h-3" /> {t("privacy.title")}</Link></li>
-              <li><a href="mailto:chanmakara672@gmail.com" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors flex items-center gap-1"><Mail className="w-3 h-3" /> Email Us</a></li>
-              <li><a href="https://t.me/makara_admin" target="_blank" rel="noopener noreferrer" className="text-sm text-[#7A8299] hover:text-cyan-400 transition-colors flex items-center gap-1"><MessageCircle className="w-3 h-3" /> Telegram</a></li>
+              <li>
+                <a href="https://t.me/makara_admin" target="_blank" rel="noopener noreferrer"
+                   className="text-white/40 hover:text-gold text-sm transition-colors">
+                  Telegram
+                </a>
+              </li>
+              <li>
+                <a href="mailto:chanmakara672@gmail.com"
+                   className="text-white/40 hover:text-gold text-sm transition-colors">
+                  Email
+                </a>
+              </li>
             </ul>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-[#141821] py-6">
-        <div className="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-[#7A8299]">{t("footer.rights")}</p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-[#7A8299]">Visa</span>
-            <span className="text-xs text-[#7A8299]">Mastercard</span>
-            <span className="text-xs text-[#7A8299]">PayPal</span>
-            <span className="text-xs text-[#7A8299]">Crypto</span>
-          </div>
+        {/* បន្ទាត់ខាងក្រោម */}
+        <div className="mt-8 pt-6 border-t border-neon/5 text-center">
+          <p className="text-white/20 text-xs">
+            &copy; {new Date().getFullYear()} Makara Store. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
-  );
+  )
 }
