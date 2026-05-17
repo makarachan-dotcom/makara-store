@@ -20,6 +20,11 @@ export default function CinematicIntro() {
     try { sessionStorage.setItem(SESSION_KEY, '1') } catch {}
   }, [setHasSeenIntro])
 
+  const dismiss = useCallback(() => {
+    setIsVisible(false)
+    setHasSeenIntro(true)
+  }, [setHasSeenIntro])
+
   useEffect(() => {
     try {
       if (sessionStorage.getItem(SESSION_KEY)) {
