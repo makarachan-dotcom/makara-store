@@ -162,6 +162,80 @@ export default function PurchaseHistoryPage() {
                   </span>
                   <span className="text-gold font-bold">${order.totalAmount.toFixed(2)}</span>
                 </div>
+
+                {/* Order ID for reference */}
+                <div className="border-t border-white/5 pt-3 mt-3">
+                  <p className="text-white/30 text-xs">
+                    {locale === 'km' ? 'លេខកូដបញ្ជាទិញ: ' : 'Order ID: '}
+                    <span className="text-white/50 font-mono">{order.orderNumber}</span>
+                  </p>
+                </div>
+
+                {/* Payment confirmed - contact admin message */}
+                {(order.status === 'PAYMENT_VERIFIED' || order.status === 'COMPLETED') && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border-t border-green-500/20 pt-3 mt-3"
+                  >
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 text-center">
+                      <div className="w-10 h-10 mx-auto bg-green-500/10 rounded-full flex items-center justify-center mb-2">
+                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-green-400 text-sm font-semibold font-khmer mb-1">
+                        {locale === 'km'
+                          ? 'ការបង់ប្រាក់របស់អ្នកត្រូវបានផ្ទៀងផ្ទាត់!'
+                          : 'Your payment has been verified!'}
+                      </p>
+                      <p className="text-white/50 text-xs font-khmer mb-3">
+                        {locale === 'km'
+                          ? 'សូមទាក់ទង Admin ដើម្បីទទួលផលិតផលរបស់អ្នក។ សូមអរគុណ!'
+                          : 'Please contact Admin to receive your order. Thank you!'}
+                      </p>
+                      <a
+                        href="https://t.me/AF4STURF"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-neon/20 to-blue-600/20
+                                   border border-neon/30 text-neon text-sm font-semibold px-5 py-2.5
+                                   rounded-xl hover:from-neon/30 hover:to-blue-600/30 transition-all font-khmer"
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                        </svg>
+                        {locale === 'km' ? 'ទាក់ទង Admin' : 'Contact Admin'}
+                      </a>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Processing status - waiting message */}
+                {order.status === 'PROCESSING' && (
+                  <div className="border-t border-blue-500/20 pt-3 mt-3">
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-center">
+                      <p className="text-blue-400 text-xs font-khmer">
+                        {locale === 'km'
+                          ? 'ការបញ្ជាទិញរបស់អ្នកកំពុងដំណើរការ។ សូមរង់ចាំ...'
+                          : 'Your order is being processed. Please wait...'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment uploaded - waiting for verification */}
+                {order.status === 'PAYMENT_UPLOADED' && (
+                  <div className="border-t border-orange-500/20 pt-3 mt-3">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3 text-center">
+                      <p className="text-orange-400 text-xs font-khmer">
+                        {locale === 'km'
+                          ? 'បានផ្ទុកបង្កាន់ដៃ។ កំពុងរង់ចាំការផ្ទៀងផ្ទាត់ពី Admin...'
+                          : 'Receipt uploaded. Waiting for Admin verification...'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
