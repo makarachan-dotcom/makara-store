@@ -6,7 +6,7 @@ import { createAdminToken, COOKIE_NAME, TOKEN_TTL } from '@/lib/admin-token'
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
 
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+  if (!session?.user?.email || !isAdminUser(session.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
