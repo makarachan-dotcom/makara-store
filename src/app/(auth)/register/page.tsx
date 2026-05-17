@@ -42,11 +42,14 @@ export default function RegisterPage() {
 
       setSuccess(true)
       setTimeout(async () => {
-        await signIn('credentials', {
+        const result = await signIn('credentials', {
           email,
           password,
-          callbackUrl: '/',
+          redirect: false,
         })
+        if (!result?.error) {
+          window.location.href = '/'
+        }
       }, 1000)
     } catch {
       setError('\u1798\u17b6\u1793\u1780\u17c6\u17a0\u17bb\u179f\u17d4 \u179f\u17bc\u1798\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u1798\u17d2\u178f\u1784\u1791\u17c0\u178f\u17d4')
