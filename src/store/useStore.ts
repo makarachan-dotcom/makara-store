@@ -70,8 +70,12 @@ export const useStore = create<StoreState>()(
 
       // ធាតុរចនាប័ទ្ម
       theme: { mode: 'dark', accentColor: '#00F2FE' },
-      setTheme: (theme) =>
-        set((state) => ({ theme: { ...state.theme, ...theme } })),
+      setTheme: (theme) => {
+        set((state) => ({ theme: { ...state.theme, ...theme } }))
+        if (typeof document !== 'undefined' && theme.mode) {
+          document.documentElement.setAttribute('data-theme', theme.mode)
+        }
+      },
 
       // កន្ត្រក
       cart: [],

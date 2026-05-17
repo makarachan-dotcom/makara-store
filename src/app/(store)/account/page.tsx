@@ -216,15 +216,16 @@ export default function AccountPage() {
             </svg>
             <h3 className="text-white font-semibold font-khmer">{t('appearance')}</h3>
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {([
               { mode: 'dark' as const, label: locale === 'km' ? 'ងងឹត' : 'Dark', icon: '🌙' },
+              { mode: 'light' as const, label: locale === 'km' ? 'ភ្លឺ' : 'Light', icon: '☀️' },
               { mode: 'gaming' as const, label: locale === 'km' ? 'ហ្គេម' : 'Gaming', icon: '🎮' },
             ]).map((opt) => (
               <button
                 key={opt.mode}
                 onClick={() => setTheme({ mode: opt.mode })}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all ${
+                className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl border transition-all ${
                   theme.mode === opt.mode
                     ? 'border-neon/40 bg-neon/10 text-neon'
                     : 'border-white/10 bg-white/5 text-white/50 hover:text-white/70'

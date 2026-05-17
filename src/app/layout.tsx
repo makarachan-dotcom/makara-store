@@ -30,7 +30,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="km" className={`dark ${kantumruyPro.variable}`}>
+    <html lang="km" className={`dark ${kantumruyPro.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var store = JSON.parse(localStorage.getItem('makara-store-storage') || '{}');
+            var mode = store && store.state && store.state.theme && store.state.theme.mode;
+            if (mode) document.documentElement.setAttribute('data-theme', mode);
+          } catch(e) {}
+        `}} />
+      </head>
       <body className="bg-obsidian text-white font-khmer antialiased min-h-screen">
         {children}
       </body>
