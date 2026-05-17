@@ -68,9 +68,15 @@ export default function AdminReceiptsPage() {
       })
       if (res.ok) {
         fetchReceipts()
+      } else {
+        const data = await res.json().catch(() => ({ error: 'Action failed' }))
+        alert(data.error || `Failed to ${action} receipt`)
       }
-    } catch { /* action failed */ }
-    finally { setProcessingId(null) }
+    } catch {
+      alert(`Network error - could not ${action} receipt`)
+    } finally {
+      setProcessingId(null)
+    }
   }
 
   const filteredReceipts = filter === 'ALL' ? receipts : receipts.filter((r) => r.receiptStatus === filter)

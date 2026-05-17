@@ -59,16 +59,20 @@ export default function AdminOrdersPage() {
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId)
     try {
-      await fetch('/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, status: newStatus }),
       })
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      )
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+        )
+      } else {
+        alert('Failed to update order status')
+      }
     } catch {
-      // Failed silently
+      alert('Network error - could not update order status')
     } finally {
       setUpdatingId(null)
     }

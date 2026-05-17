@@ -42,6 +42,9 @@ export default function AdminProductsPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [showCatForm, setShowCatForm] = useState(false)
@@ -69,21 +72,36 @@ export default function AdminProductsPage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setUploading(true)
+    setUploadError(null)
     const formData = new FormData()
     formData.append('file', file)
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
       const data = await res.json()
+      if (!res.ok) {
+        setUploadError(data.error || 'Upload failed')
+        return
+      }
       if (data.url) {
         setForm((f) => ({ ...f, image: data.url }))
         setImagePreview(data.url)
       }
-    } catch { /* upload failed */ }
+    } catch {
+      setUploadError('Network error - could not upload image')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   const handleSave = async () => {
-    if (!form.nameKm || !form.nameEn || !form.price || !form.categoryId) return
+    if (!form.nameKm || !form.nameEn || !form.price || !form.categoryId) {
+      setSaveError('Please fill in all required fields (Name KM, Name EN, Price, Category)')
+      return
+    }
     setSaving(true)
+    setSaveError(null)
     try {
       const method = editingId ? 'PUT' : 'POST'
       const body = editingId ? { id: editingId, ...form } : form
@@ -97,10 +115,17 @@ export default function AdminProductsPage() {
         setEditingId(null)
         setForm(emptyForm)
         setImagePreview(null)
+        setUploadError(null)
         fetchProducts()
+      } else {
+        const data = await res.json().catch(() => ({ error: 'Save failed' }))
+        setSaveError(data.error || `Error ${res.status}`)
       }
-    } catch { /* save failed */ }
-    finally { setSaving(false) }
+    } catch {
+      setSaveError('Network error - could not save product')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleEdit = (product: Product) => {
@@ -119,9 +144,15 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return
     try {
-      await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        alert('Failed to delete product')
+        return
+      }
       fetchProducts()
-    } catch { /* delete failed */ }
+    } catch {
+      alert('Network error - could not delete product')
+    }
   }
 
   const handleCreateCategory = async () => {
@@ -136,8 +167,13 @@ export default function AdminProductsPage() {
         setShowCatForm(false)
         setCatForm({ nameKm: '', nameEn: '' })
         fetchCategories()
+      } else {
+        const data = await res.json().catch(() => ({ error: 'Failed to create category' }))
+        alert(data.error || 'Failed to create category')
       }
-    } catch { /* create failed */ }
+    } catch {
+      alert('Network error - could not create category')
+    }
   }
 
   if (loading) {
@@ -245,17 +281,20 @@ export default function AdminProductsPage() {
             <div className="md:col-span-2">
               <label className="block text-sm text-white/40 font-khmer mb-1.5">រូបភាពផលិតផល</label>
               <div className="flex items-center gap-4">
-                <button type="button" onClick={() => fileInputRef.current?.click()}
-                  className="border border-dashed border-neon/30 rounded-lg px-6 py-3 text-sm text-neon hover:border-neon/60 transition-colors">
-                  📷 ផ្ទុករូបភាព
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+                  className="border border-dashed border-neon/30 rounded-lg px-6 py-3 text-sm text-neon hover:border-neon/60 transition-colors disabled:opacity-50">
+                  {uploading ? '⏳ កំពុងផ្ទុក...' : '📷 ផ្ទុករូបភាព'}
                 </button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageUpload} className="hidden" />
                 {imagePreview && (
                   <div className="w-16 h-16 rounded-lg overflow-hidden border border-neon/20">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
+              {uploadError && (
+                <p className="text-red-400 text-xs mt-2">{uploadError}</p>
+              )}
             </div>
             <div className="md:col-span-2">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -265,11 +304,14 @@ export default function AdminProductsPage() {
               </label>
             </div>
           </div>
+          {saveError && (
+            <p className="text-red-400 text-xs mt-2">{saveError}</p>
+          )}
           <div className="flex gap-3 mt-4">
             <button onClick={handleSave} disabled={saving} className="btn-gold text-sm disabled:opacity-50">
               {saving ? 'កំពុងរក្សាទុក...' : 'រក្សាទុក'}
             </button>
-            <button onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm); setImagePreview(null) }} className="btn-outline-neon text-sm">បោះបង់</button>
+            <button onClick={() => { setShowForm(false); setEditingId(null); setForm(emptyForm); setImagePreview(null); setSaveError(null) }} className="btn-outline-neon text-sm">បោះបង់</button>
           </div>
         </motion.div>
       )}

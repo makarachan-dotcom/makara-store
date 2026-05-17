@@ -11,6 +11,8 @@ export default function AdminSettingsPage() {
   const [updateStatus, setUpdateStatus] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [telegramUrl, setTelegramUrl] = useState('https://t.me/AF4STURF')
+  const [uploadingBank, setUploadingBank] = useState<string | null>(null)
+  const [uploadBankError, setUploadBankError] = useState<string | null>(null)
   const khqrRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const fetchSettings = useCallback(async () => {
@@ -73,15 +75,27 @@ export default function AdminSettingsPage() {
   const handleKhqrUpload = async (bank: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setUploadingBank(bank)
+    setUploadBankError(null)
     const formData = new FormData()
     formData.append('file', file)
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
       const data = await res.json()
+      if (!res.ok) {
+        setUploadBankError(data.error || 'Upload failed')
+        return
+      }
       if (data.url) {
         await saveSetting(`khqr${bank}`, data.url)
       }
-    } catch { /* upload failed */ }
+    } catch {
+      setUploadBankError('Network error - could not upload image')
+    } finally {
+      setUploadingBank(null)
+      const ref = khqrRefs.current[bank]
+      if (ref) ref.value = ''
+    }
   }
 
   if (loading) {
@@ -192,18 +206,27 @@ export default function AdminSettingsPage() {
             <div key={bank.key} className="border border-neon/10 rounded-xl p-4">
               <p className="text-sm text-white/60 mb-3">{bank.label}</p>
               <div
-                onClick={() => khqrRefs.current[bank.key]?.click()}
-                className="aspect-square bg-obsidian-50 rounded-lg flex items-center justify-center border border-dashed border-neon/20 cursor-pointer hover:border-neon/40 transition-colors overflow-hidden"
+                onClick={() => !uploadingBank && khqrRefs.current[bank.key]?.click()}
+                className={`aspect-square bg-obsidian-50 rounded-lg flex items-center justify-center border border-dashed border-neon/20 cursor-pointer hover:border-neon/40 transition-colors overflow-hidden ${uploadingBank === bank.key ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 {settings[`khqr${bank.key}`] ? (
                   <img src={settings[`khqr${bank.key}`]} alt={bank.label} className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center">
-                    <svg className="w-8 h-8 mx-auto text-neon/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="text-xs text-white/30 font-khmer">ផ្ទុករូបភាព KHQR</p>
+                    {uploadingBank === bank.key ? (
+                      <>
+                        <div className="w-8 h-8 mx-auto border-2 border-neon border-t-transparent rounded-full animate-spin mb-2" />
+                        <p className="text-xs text-neon/50 font-khmer">កំពុងផ្ទុក...</p>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-8 h-8 mx-auto text-neon/30 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-xs text-white/30 font-khmer">ផ្ទុករូបភាព KHQR</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -216,6 +239,9 @@ export default function AdminSettingsPage() {
             </div>
           ))}
         </div>
+        {uploadBankError && (
+          <p className="text-red-400 text-xs mt-3">{uploadBankError}</p>
+        )}
       </div>
 
       {/* Telegram URL */}

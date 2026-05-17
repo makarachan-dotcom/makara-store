@@ -24,6 +24,8 @@ export default function AdminAnnouncementsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   const typeColors: Record<string, string> = {
     INFO: 'bg-blue-400/10 text-blue-400',
@@ -36,36 +38,52 @@ export default function AdminAnnouncementsPage() {
     try {
       const res = await fetch('/api/announcements')
       const data = await res.json()
+      if (!res.ok) {
+        setFetchError(data.error || 'Failed to load announcements')
+        return
+      }
+      setFetchError(null)
       setAnnouncements(data.announcements || [])
-    } catch { setAnnouncements([]) }
-    finally { setLoading(false) }
+    } catch {
+      setFetchError('Network error - could not load announcements')
+      setAnnouncements([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { fetchAnnouncements() }, [fetchAnnouncements])
 
   const handleSave = async () => {
-    if (!form.titleKm || !form.titleEn) return
+    if (!form.titleKm || !form.titleEn) {
+      setSaveError('Please fill in both title fields')
+      return
+    }
     setSaving(true)
+    setSaveError(null)
     try {
-      if (editingId) {
-        await fetch('/api/announcements', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: editingId, ...form }),
-        })
+      const method = editingId ? 'PUT' : 'POST'
+      const body = editingId ? { id: editingId, ...form } : form
+      const res = await fetch('/api/announcements', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        setForm(emptyForm)
+        setEditingId(null)
+        setShowForm(false)
+        setSaveError(null)
+        fetchAnnouncements()
       } else {
-        await fetch('/api/announcements', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
+        const data = await res.json().catch(() => ({ error: 'Save failed' }))
+        setSaveError(data.error || `Error ${res.status}`)
       }
-      setForm(emptyForm)
-      setEditingId(null)
-      setShowForm(false)
-      fetchAnnouncements()
-    } catch { /* save failed */ }
-    finally { setSaving(false) }
+    } catch {
+      setSaveError('Network error - could not save announcement')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleEdit = (ann: Announcement) => {
@@ -81,27 +99,41 @@ export default function AdminAnnouncementsPage() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return
     try {
-      await fetch(`/api/announcements?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/announcements?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        alert('Failed to delete announcement')
+        return
+      }
       fetchAnnouncements()
-    } catch { /* delete failed */ }
+    } catch {
+      alert('Network error - could not delete announcement')
+    }
   }
 
   const handleToggleActive = async (ann: Announcement) => {
     try {
-      await fetch('/api/announcements', {
+      const res = await fetch('/api/announcements', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: ann.id, isActive: !ann.isActive }),
       })
+      if (!res.ok) {
+        alert('Failed to update announcement status')
+        return
+      }
       fetchAnnouncements()
-    } catch { /* toggle failed */ }
+    } catch {
+      alert('Network error - could not update status')
+    }
   }
 
   const handleCancel = () => {
     setForm(emptyForm)
     setEditingId(null)
     setShowForm(false)
+    setSaveError(null)
   }
 
   if (loading) {
@@ -184,6 +216,9 @@ export default function AdminAnnouncementsPage() {
               </select>
             </div>
           </div>
+          {saveError && (
+            <p className="text-red-400 text-xs mt-2">{saveError}</p>
+          )}
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleSave}
@@ -197,7 +232,14 @@ export default function AdminAnnouncementsPage() {
         </motion.div>
       )}
 
-      {announcements.length === 0 ? (
+      {fetchError && (
+        <div className="card-gaming p-4 border border-red-500/20">
+          <p className="text-red-400 text-sm">{fetchError}</p>
+          <button onClick={fetchAnnouncements} className="text-neon text-xs mt-2 hover:underline">Retry</button>
+        </div>
+      )}
+
+      {announcements.length === 0 && !fetchError ? (
         <div className="card-gaming p-8 text-center">
           <p className="text-white/30 font-khmer">មិនមានការជូនដំណឹង - សូមបន្ថែមការជូនដំណឹងថ្មី</p>
           <p className="text-white/20 text-sm mt-1">No announcements yet - Add a new one</p>
