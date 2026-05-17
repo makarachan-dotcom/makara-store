@@ -167,25 +167,6 @@ export default function MobileBottomNav() {
         </div>
       </nav>
 
-      {/* Floating Chat Bot Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-20 right-4 z-30 md:hidden w-14 h-14 rounded-full
-                   bg-gradient-to-br from-neon/80 to-blue-600/80 backdrop-blur-sm
-                   border border-neon/30 shadow-lg shadow-neon/20
-                   flex items-center justify-center"
-      >
-        <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="12" cy="10" r="6" strokeWidth="1.5" />
-          <circle cx="9.5" cy="9" r="1" fill="currentColor" stroke="none" />
-          <circle cx="14.5" cy="9" r="1" fill="currentColor" stroke="none" />
-          <path d="M9.5 11.5c0 0 1 1.5 2.5 1.5s2.5-1.5 2.5-1.5" strokeWidth="1" strokeLinecap="round" />
-          <path d="M6 8l-2-2M18 8l2-2" strokeWidth="1.5" strokeLinecap="round" className="text-neon" />
-          <path d="M12 16v2M10 18h4" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </motion.button>
     </>
   )
 }

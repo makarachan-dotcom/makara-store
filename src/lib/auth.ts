@@ -54,18 +54,42 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   session: {
     strategy: 'jwt',
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        if (!user.email) return false
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        })
+        if (!existingUser) {
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name || user.email.split('@')[0],
+              image: user.image,
+              role: user.email === ADMIN_EMAIL ? 'ADMIN' : 'USER',
+            },
+          })
+        }
+      }
+      return true
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as { role?: string }).role || 'USER'
         token.id = user.id
       }
-      // កំណត់ Admin Role ដោយស្វ័យប្រវត្តិ
       if (token.email === ADMIN_EMAIL) {
         token.role = 'ADMIN'
       }
