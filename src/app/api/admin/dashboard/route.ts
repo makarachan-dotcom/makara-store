@@ -1,14 +1,12 @@
 // API Route: Admin Dashboard Stats - Real data from DB
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 

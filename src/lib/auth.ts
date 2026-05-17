@@ -7,7 +7,12 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
 // អ៊ីមែល Admin តែមួយគត់ដែលអាចចូលផ្ទាំងគ្រប់គ្រង
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
+export const ADMIN_EMAIL = 'chanmakara672@gmail.com'
+
+export function isAdminUser(user: { email?: string | null; role?: string } | undefined | null): boolean {
+  if (!user?.email) return false
+  return user.email === ADMIN_EMAIL || user.role === 'ADMIN'
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),

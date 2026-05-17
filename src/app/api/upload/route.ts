@@ -1,13 +1,11 @@
 // API Route: Image Upload - stores as base64 in DB (works with Vercel)
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
+import { authOptions, isAdminUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 

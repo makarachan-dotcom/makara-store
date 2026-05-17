@@ -1,10 +1,8 @@
 // API Route: ការជូនដំណឹង - Real Version with Prisma
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
 export async function GET() {
   try {
@@ -19,7 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 
@@ -56,7 +54,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 
@@ -92,7 +90,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 
