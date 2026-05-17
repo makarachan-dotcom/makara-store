@@ -1,15 +1,29 @@
 'use client'
 
-// ទំព័រគ្រប់គ្រងការជូនដំណឹង Admin - ភាសាពីរ
-import { useState } from 'react'
+// ទំព័រគ្រប់គ្រងការជូនដំណឹង Admin - Real Version with Prisma
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 
+interface Announcement {
+  id: string
+  titleKm: string
+  titleEn: string
+  contentKm: string
+  contentEn: string
+  type: string
+  isActive: boolean
+  createdAt: string
+}
+
+const emptyForm = { titleKm: '', titleEn: '', contentKm: '', contentEn: '', type: 'INFO' }
+
 export default function AdminAnnouncementsPage() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
-  const [announcements] = useState([
-    { id: '1', titleKm: 'ការផ្សព្វផ្សាយពិសេស!', titleEn: 'Special Promotion!', type: 'PROMOTION', active: true },
-    { id: '2', titleKm: 'ការថែទាំប្រព័ន្ធ', titleEn: 'System Maintenance', type: 'WARNING', active: false },
-  ])
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState(emptyForm)
 
   const typeColors: Record<string, string> = {
     INFO: 'bg-blue-400/10 text-blue-400',
@@ -18,43 +32,151 @@ export default function AdminAnnouncementsPage() {
     URGENT: 'bg-red-400/10 text-red-400',
   }
 
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      const res = await fetch('/api/announcements')
+      const data = await res.json()
+      setAnnouncements(data.announcements || [])
+    } catch { setAnnouncements([]) }
+    finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { fetchAnnouncements() }, [fetchAnnouncements])
+
+  const handleSave = async () => {
+    if (!form.titleKm || !form.titleEn) return
+    setSaving(true)
+    try {
+      if (editingId) {
+        await fetch('/api/announcements', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingId, ...form }),
+        })
+      } else {
+        await fetch('/api/announcements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        })
+      }
+      setForm(emptyForm)
+      setEditingId(null)
+      setShowForm(false)
+      fetchAnnouncements()
+    } catch { /* save failed */ }
+    finally { setSaving(false) }
+  }
+
+  const handleEdit = (ann: Announcement) => {
+    setForm({
+      titleKm: ann.titleKm,
+      titleEn: ann.titleEn,
+      contentKm: ann.contentKm,
+      contentEn: ann.contentEn,
+      type: ann.type,
+    })
+    setEditingId(ann.id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/announcements?id=${id}`, { method: 'DELETE' })
+      fetchAnnouncements()
+    } catch { /* delete failed */ }
+  }
+
+  const handleToggleActive = async (ann: Announcement) => {
+    try {
+      await fetch('/api/announcements', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ann.id, isActive: !ann.isActive }),
+      })
+      fetchAnnouncements()
+    } catch { /* toggle failed */ }
+  }
+
+  const handleCancel = () => {
+    setForm(emptyForm)
+    setEditingId(null)
+    setShowForm(false)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-display font-bold text-white font-khmer">ការជូនដំណឹង</h1>
-        <button onClick={() => setShowForm(!showForm)} className="btn-neon text-sm">
+        <button
+          onClick={() => { setForm(emptyForm); setEditingId(null); setShowForm(!showForm) }}
+          className="btn-neon text-sm"
+        >
           + បន្ថែមការជូនដំណឹង
         </button>
       </div>
 
-      {/* ទម្រង់បន្ថែម - ភាសាពីរ */}
       {showForm && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="card-gaming p-6"
         >
-          <h3 className="text-neon font-semibold mb-4 font-khmer">ការជូនដំណឹងថ្មី</h3>
+          <h3 className="text-neon font-semibold mb-4 font-khmer">
+            {editingId ? 'កែប្រែការជូនដំណឹង' : 'ការជូនដំណឹងថ្មី'}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/40 font-khmer mb-1.5">ចំណងជើង (ខ្មែរ)</label>
-              <input className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50" placeholder="ចំណងជើងជាភាសាខ្មែរ" />
+              <input
+                value={form.titleKm}
+                onChange={(e) => setForm({ ...form, titleKm: e.target.value })}
+                className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50"
+                placeholder="ចំណងជើងជាភាសាខ្មែរ"
+              />
             </div>
             <div>
               <label className="block text-sm text-white/40 mb-1.5">Title (English)</label>
-              <input className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50" placeholder="Title in English" />
+              <input
+                value={form.titleEn}
+                onChange={(e) => setForm({ ...form, titleEn: e.target.value })}
+                className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50"
+                placeholder="Title in English"
+              />
             </div>
             <div>
               <label className="block text-sm text-white/40 font-khmer mb-1.5">មាតិកា (ខ្មែរ)</label>
-              <textarea className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50 h-24" placeholder="មាតិកាជាភាសាខ្មែរ" />
+              <textarea
+                value={form.contentKm}
+                onChange={(e) => setForm({ ...form, contentKm: e.target.value })}
+                className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50 h-24"
+                placeholder="មាតិកាជាភាសាខ្មែរ"
+              />
             </div>
             <div>
               <label className="block text-sm text-white/40 mb-1.5">Content (English)</label>
-              <textarea className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50 h-24" placeholder="Content in English" />
+              <textarea
+                value={form.contentEn}
+                onChange={(e) => setForm({ ...form, contentEn: e.target.value })}
+                className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50 h-24"
+                placeholder="Content in English"
+              />
             </div>
             <div>
               <label className="block text-sm text-white/40 font-khmer mb-1.5">ប្រភេទ</label>
-              <select className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50">
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className="w-full bg-obsidian-50 border border-neon/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-neon/50"
+              >
                 <option value="INFO">ព័ត៌មាន</option>
                 <option value="WARNING">ព្រមាន</option>
                 <option value="PROMOTION">ផ្សព្វផ្សាយ</option>
@@ -63,31 +185,47 @@ export default function AdminAnnouncementsPage() {
             </div>
           </div>
           <div className="flex gap-3 mt-4">
-            <button className="btn-gold text-sm">រក្សាទុក</button>
-            <button onClick={() => setShowForm(false)} className="btn-outline-neon text-sm">បោះបង់</button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !form.titleKm || !form.titleEn}
+              className="btn-gold text-sm disabled:opacity-50"
+            >
+              {saving ? 'កំពុងរក្សាទុក...' : 'រក្សាទុក'}
+            </button>
+            <button onClick={handleCancel} className="btn-outline-neon text-sm">បោះបង់</button>
           </div>
         </motion.div>
       )}
 
-      {/* បញ្ជីការជូនដំណឹង */}
-      <div className="space-y-3">
-        {announcements.map((ann) => (
-          <div key={ann.id} className="card-gaming p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className={`text-xs px-2 py-0.5 rounded ${typeColors[ann.type]}`}>{ann.type}</span>
-              <div>
-                <p className="text-sm text-white/70 font-khmer">{ann.titleKm}</p>
-                <p className="text-xs text-white/40">{ann.titleEn}</p>
+      {announcements.length === 0 ? (
+        <div className="card-gaming p-8 text-center">
+          <p className="text-white/30 font-khmer">មិនមានការជូនដំណឹង - សូមបន្ថែមការជូនដំណឹងថ្មី</p>
+          <p className="text-white/20 text-sm mt-1">No announcements yet - Add a new one</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {announcements.map((ann) => (
+            <div key={ann.id} className="card-gaming p-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className={`text-xs px-2 py-0.5 rounded ${typeColors[ann.type] || 'bg-white/10 text-white/60'}`}>{ann.type}</span>
+                <div>
+                  <p className="text-sm text-white/70 font-khmer">{ann.titleKm}</p>
+                  <p className="text-xs text-white/40">{ann.titleEn}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleToggleActive(ann)}
+                  className={`w-2 h-2 rounded-full cursor-pointer ${ann.isActive ? 'bg-green-400' : 'bg-red-400'}`}
+                  title={ann.isActive ? 'Active - click to deactivate' : 'Inactive - click to activate'}
+                />
+                <button onClick={() => handleEdit(ann)} className="text-neon text-xs font-khmer hover:underline">កែប្រែ</button>
+                <button onClick={() => handleDelete(ann.id)} className="text-red-400 text-xs font-khmer hover:underline">លុប</button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className={`w-2 h-2 rounded-full ${ann.active ? 'bg-green-400' : 'bg-red-400'}`} />
-              <button className="text-neon text-xs font-khmer hover:underline">កែប្រែ</button>
-              <button className="text-red-400 text-xs font-khmer hover:underline">លុប</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
