@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { verifyAdminToken, COOKIE_NAME } from '@/lib/admin-token'
 
 const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
@@ -21,8 +22,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const adminVerified = request.cookies.get('admin-verified')?.value
-  if (adminVerified !== 'true') {
+  const adminToken = request.cookies.get(COOKIE_NAME)?.value
+  const email = token.email as string
+  if (!adminToken || !verifyAdminToken(adminToken, email)) {
     const verifyUrl = new URL('/admin/verify', request.url)
     verifyUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(verifyUrl)
