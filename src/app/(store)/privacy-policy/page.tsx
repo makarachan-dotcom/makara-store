@@ -32,6 +32,7 @@ export default function PrivacyPolicyPage() {
               <p><strong className="text-white/70">៤. ការចែករំលែកព័ត៌មាន:</strong> យើងមិនលក់ ផ្ទេរ ឬជួល ព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកទៅភាគីទីបីឡើយ លើកលែងតែការផ្តល់សេវាកម្មតាមការបញ្ជាទិញ។</p>
               <p><strong className="text-white/70">៥. Cookies:</strong> គេហទំព័ររបស់យើងប្រើ cookies ដើម្បីកែលម្អបទពិសោធន៍របស់អ្នក។ អ្នកអាចបិទ cookies នៅក្នុង browser របស់អ្នក។</p>
               <p><strong className="text-white/70">៦. សិទ្ធិរបស់អ្នក:</strong> អ្នកមានសិទ្ធិស្នើសុំមើល កែប្រែ ឬលុបព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកនៅពេលណាក៏បាន។</p>
+              <p><strong className="text-white/70">៧. គោលការណ៍សងប្រាក់វិញ:</strong> ផលិតផលឌីជីថលទាំងអស់មិនអាចសងប្រាក់វិញបានទេ បើអ្នកប្ដូរចិត្ត។ សូមពិចារណាឱ្យបានច្បាស់មុនពេលទិញ។ ករណីពិសេសទាក់ទងទៅ Admin តាម Telegram: @AF4STURF។</p>
             </div>
           </section>
 
@@ -47,6 +48,7 @@ export default function PrivacyPolicyPage() {
               <p><strong className="text-white/70">4. Information Sharing:</strong> We do not sell, transfer, or rent your personal information to third parties, except for providing services as ordered.</p>
               <p><strong className="text-white/70">5. Cookies:</strong> Our website uses cookies to improve your experience. You can disable cookies in your browser settings.</p>
               <p><strong className="text-white/70">6. Your Rights:</strong> You have the right to request to view, modify, or delete your personal information at any time.</p>
+              <p><strong className="text-white/70">7. Refund Policy:</strong> All digital products are non-refundable if you change your mind. Please consider carefully before purchasing. For special cases, contact Admin on Telegram: @AF4STURF.</p>
             </div>
           </section>
 

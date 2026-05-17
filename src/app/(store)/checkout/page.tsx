@@ -41,8 +41,14 @@ export default function CheckoutPage() {
       })
       const data = await res.json()
 
-      if (data.success) {
+      if (data.status === 'AI_APPROVED' || data.success) {
         setUploadStatus('success')
+      } else if (data.status === 'AI_REJECTED') {
+        if (data.reason?.includes('blurry') || data.reason?.includes('\u1798\u17b7\u1793\u1785\u17d2\u1794\u17b6\u179f\u17cb')) {
+          setUploadStatus('blurry')
+        } else {
+          setUploadStatus('invalid')
+        }
       } else {
         setUploadStatus(data.error || 'error')
       }

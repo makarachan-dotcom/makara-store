@@ -10,7 +10,7 @@ export default function InstructionsPage() {
   // ប្រសិនបើមិនមាន video URL សម្រាប់ Admin កំណត់
   // បង្ហាញប៊ូតុង fallback ទៅ Telegram Admin
   const hasVideoUrl = false
-  const telegramUrl = 'https://t.me/makara_admin'
+  const telegramUrl = 'https://t.me/AF4STURF'
 
   return (
     <div className="cyber-grid-bg min-h-screen">
