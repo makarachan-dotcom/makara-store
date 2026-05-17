@@ -9,6 +9,7 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [telegramUrl, setTelegramUrl] = useState('https://t.me/AF4STURF')
   const khqrRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
@@ -26,14 +27,24 @@ export default function AdminSettingsPage() {
 
   const saveSetting = async (key: string, value: string) => {
     setSaving(true)
+    setSaveError(null)
     try {
-      await fetch('/api/settings', {
+      const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Save failed' }))
+        setSaveError(data.error || `Error ${res.status}`)
+        setTimeout(() => setSaveError(null), 5000)
+        return
+      }
       fetchSettings()
-    } catch { /* save failed */ }
+    } catch {
+      setSaveError('Network error - could not save')
+      setTimeout(() => setSaveError(null), 5000)
+    }
     finally { setSaving(false) }
   }
 
@@ -84,6 +95,16 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-display font-bold text-white">ការកំណត់គេហទំព័រ</h1>
+
+      {saveError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg"
+        >
+          <p className="text-red-400 text-sm">{saveError}</p>
+        </motion.div>
+      )}
 
       {/* Update Website Button */}
       <div className="card-gaming p-6">

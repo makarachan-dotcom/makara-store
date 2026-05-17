@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -18,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ orders: [] })
   }
 
-  const isAdmin = session.user.email === ADMIN_EMAIL
+  const isAdmin = isAdminUser(session.user as { email?: string; role?: string })
   const orders = await prisma.order.findMany({
     where: isAdmin ? {} : { userId: user.id },
     include: { items: true, user: { select: { name: true, email: true } } },
@@ -81,7 +79,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
   }
 

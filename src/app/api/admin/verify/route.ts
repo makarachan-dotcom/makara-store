@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdminUser } from '@/lib/auth'
 import { createAdminToken, COOKIE_NAME, TOKEN_TTL } from '@/lib/admin-token'
-
-const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user?.email || session.user.email !== ADMIN_EMAIL) {
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
