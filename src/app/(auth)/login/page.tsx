@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, useSession, SessionProvider } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -11,6 +11,14 @@ type LoginStep = 'idle' | 'authenticating' | 'retrieving' | 'completed'
 const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
 export default function LoginPage() {
+  return (
+    <SessionProvider>
+      <LoginPageContent />
+    </SessionProvider>
+  )
+}
+
+function LoginPageContent() {
   const { data: session } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

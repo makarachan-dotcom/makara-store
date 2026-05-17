@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { Suspense, useState, useRef, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
@@ -8,6 +8,18 @@ import Image from 'next/image'
 const PIN_LENGTH = 6
 
 export default function AdminVerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-neon/30 border-t-neon rounded-full animate-spin" />
+      </div>
+    }>
+      <AdminVerifyContent />
+    </Suspense>
+  )
+}
+
+function AdminVerifyContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/admin/dashboard'
