@@ -1,5 +1,13 @@
 import type { Metadata } from 'next'
+import { Kantumruy_Pro } from 'next/font/google'
 import '@/styles/globals.css'
+
+const kantumruyPro = Kantumruy_Pro({
+  subsets: ['khmer', 'latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-kantumruy',
+})
 
 export const metadata: Metadata = {
   title: 'Makara Store - Premium Digital Store',
@@ -15,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="km" className="dark">
+    <html lang="km" className={`dark ${kantumruyPro.variable}`}>
       <body className="bg-obsidian text-white font-khmer antialiased min-h-screen">
         {children}
       </body>
