@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { createAdminToken, COOKIE_NAME, TOKEN_TTL } from '@/lib/admin-token'
 
 const ADMIN_EMAIL = 'chanmakara672@gmail.com'
 
@@ -28,13 +29,14 @@ export async function POST(request: Request) {
     )
   }
 
+  const token = await createAdminToken(session.user.email)
   const response = NextResponse.json({ success: true })
-  response.cookies.set('admin-verified', 'true', {
+  response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24,
+    maxAge: TOKEN_TTL,
   })
 
   return response
