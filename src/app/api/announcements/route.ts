@@ -4,6 +4,23 @@ import { getServerSession } from 'next-auth'
 import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 30
+
+async function getAdminSession() {
+  let session = null
+  try {
+    session = await getServerSession(authOptions)
+  } catch (authError) {
+    console.error('Announcement auth error:', authError)
+    return { error: NextResponse.json({ error: 'Authentication error. Please log out and log in again.' }, { status: 401 }) }
+  }
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+    return { error: NextResponse.json({ error: 'Admin access required. Please log in as admin.' }, { status: 403 }) }
+  }
+  return { session }
+}
+
 export async function GET() {
   try {
     const announcements = await prisma.announcement.findMany({
@@ -16,10 +33,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-  }
+  const auth = await getAdminSession()
+  if (auth.error) return auth.error
 
   try {
     const body = await request.json()
@@ -53,10 +68,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-  }
+  const auth = await getAdminSession()
+  if (auth.error) return auth.error
 
   try {
     const body = await request.json()
@@ -89,10 +102,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-  }
+  const auth = await getAdminSession()
+  if (auth.error) return auth.error
 
   try {
     const { searchParams } = new URL(request.url)

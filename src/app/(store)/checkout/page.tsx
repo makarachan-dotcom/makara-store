@@ -12,10 +12,10 @@ import { useStore } from '@/store/useStore'
 
 type Bank = 'ABA_BANK' | 'ACLEDA_BANK' | 'WING_BANK'
 
-const banks: { id: Bank; name: string; color: string }[] = [
-  { id: 'ABA_BANK', name: 'ABA Bank', color: 'from-blue-600 to-blue-800' },
-  { id: 'ACLEDA_BANK', name: 'ACLEDA Bank', color: 'from-green-600 to-green-800' },
-  { id: 'WING_BANK', name: 'Wing Bank', color: 'from-yellow-600 to-yellow-800' },
+const banks: { id: Bank; name: string; icon: string; settingsKey: string }[] = [
+  { id: 'ABA_BANK', name: 'ABA Bank', icon: '/images/banks/aba.png', settingsKey: 'khqrABA' },
+  { id: 'ACLEDA_BANK', name: 'ACLEDA Bank', icon: '/images/banks/acleda.jpg', settingsKey: 'khqrACLEDA' },
+  { id: 'WING_BANK', name: 'Wing Bank', icon: '/images/banks/wing.webp', settingsKey: 'khqrWING' },
 ]
 
 export default function CheckoutPage() {
@@ -30,12 +30,20 @@ export default function CheckoutPage() {
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [orderCreated, setOrderCreated] = useState(false)
+  const [settings, setSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
     }
   }, [status, router])
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data.settings || {}))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const dismissed = localStorage.getItem('makara-privacy-agreed')
@@ -264,8 +272,8 @@ export default function CheckoutPage() {
                     : 'border-white/10 hover:border-white/20'
                 }`}
               >
-                <div className={`w-12 h-12 mx-auto rounded-lg bg-gradient-to-br ${bank.color} flex items-center justify-center mb-2`}>
-                  <span className="text-white text-xs font-bold">{bank.name.split(' ')[0]}</span>
+                <div className="w-12 h-12 mx-auto rounded-lg overflow-hidden mb-2 relative">
+                  <Image src={bank.icon} alt={bank.name} fill className="object-contain" sizes="48px" />
                 </div>
                 <span className="text-xs text-white/60">{bank.name}</span>
               </button>
@@ -274,21 +282,33 @@ export default function CheckoutPage() {
         </div>
 
         {/* KHQR Code */}
-        {selectedBank && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-gaming p-6 mb-6 text-center"
-          >
-            <p className="text-neon text-sm mb-4 font-khmer">
-              {locale === 'km' ? 'ស្កែន KHQR ខាងក្រោមដើម្បីបង់ប្រាក់' : 'Scan KHQR below to pay'}
-            </p>
-            <div className="w-48 h-48 mx-auto bg-white rounded-xl flex items-center justify-center mb-4">
-              <p className="text-obsidian text-xs font-semibold">KHQR Code</p>
-            </div>
-            <p className="text-gold font-bold text-lg">${getCartTotal().toFixed(2)}</p>
-          </motion.div>
-        )}
+        {selectedBank && (() => {
+          const bankInfo = banks.find(b => b.id === selectedBank)
+          const khqrImage = bankInfo ? settings[bankInfo.settingsKey] : null
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card-gaming p-6 mb-6 text-center"
+            >
+              <p className="text-neon text-sm mb-4 font-khmer">
+                {locale === 'km' ? '\u179f\u17d2\u1780\u17c2\u1793 KHQR \u1781\u17b6\u1784\u1780\u17d2\u179a\u17c4\u1798\u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb' : 'Scan KHQR below to pay'}
+              </p>
+              {khqrImage ? (
+                <div className="w-64 mx-auto bg-white rounded-xl overflow-hidden mb-4">
+                  <img src={khqrImage} alt="KHQR Code" className="w-full h-auto" />
+                </div>
+              ) : (
+                <div className="w-48 h-48 mx-auto bg-white rounded-xl flex items-center justify-center mb-4">
+                  <p className="text-obsidian text-xs font-semibold">
+                    {locale === 'km' ? '\u1798\u17b7\u1793\u1791\u17b6\u1793\u17cb\u1798\u17b6\u1793 KHQR \u1793\u17c5\u17a1\u17be\u1799\u1791\u17c1' : 'KHQR not available yet'}
+                  </p>
+                </div>
+              )}
+              <p className="text-gold font-bold text-lg">${getCartTotal().toFixed(2)}</p>
+            </motion.div>
+          )
+        })()}
 
         {/* ផ្ទុកបង្កាន់ដៃ */}
         {selectedBank && (
