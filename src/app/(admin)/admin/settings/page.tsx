@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 
 export default function AdminSettingsPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false)
-  const [telegramUrl, setTelegramUrl] = useState('https://t.me/makara_admin')
+  const [telegramUrl, setTelegramUrl] = useState('https://t.me/AF4STURF')
 
   return (
     <div className="space-y-6">

@@ -15,7 +15,7 @@ interface Message {
 
 export default function FloatingAIBot() {
   const { t, locale } = useTranslation()
-  const { isChatOpen, setChatOpen } = useStore()
+  const { isChatOpen, setChatOpen, isMobileMenuOpen } = useStore()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -123,7 +123,7 @@ export default function FloatingAIBot() {
 
   return (
     <>
-      <motion.button
+      {!isMobileMenuOpen && <motion.button
         onClick={() => setChatOpen(!isChatOpen)}
         className="fixed bottom-20 md:bottom-6 right-4 z-50 w-14 h-14 rounded-full
                    bg-gradient-to-br from-neon/80 to-blue-600/80 backdrop-blur-sm
@@ -149,7 +149,7 @@ export default function FloatingAIBot() {
           className="object-cover w-full h-full rounded-full"
         />
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse border-2 border-obsidian" />
-      </motion.button>
+      </motion.button>}
 
       <AnimatePresence>
         {isChatOpen && (
@@ -179,7 +179,7 @@ export default function FloatingAIBot() {
                 </motion.div>
                 <div>
                   <p className="text-sm font-semibold text-neon">{t('aiChatTitle')}</p>
-                  <p className="text-[10px] text-white/40">Powered by Kimi K2.6</p>
+                  <p className="text-[10px] text-white/40">Made by Makara</p>
                 </div>
               </div>
               <button

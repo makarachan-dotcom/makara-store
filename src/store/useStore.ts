@@ -44,6 +44,11 @@ interface StoreState {
   hasSeenIntro: boolean
   setHasSeenIntro: (seen: boolean) => void
 
+  // Favorites
+  favorites: string[]
+  toggleFavorite: (productId: string) => void
+  isFavorite: (productId: string) => boolean
+
   // UI State
   isMobileMenuOpen: boolean
   setMobileMenuOpen: (open: boolean) => void
@@ -101,6 +106,16 @@ export const useStore = create<StoreState>()(
       hasSeenIntro: false,
       setHasSeenIntro: (seen) => set({ hasSeenIntro: seen }),
 
+      // Favorites
+      favorites: [],
+      toggleFavorite: (productId) =>
+        set((state) => ({
+          favorites: state.favorites.includes(productId)
+            ? state.favorites.filter((id) => id !== productId)
+            : [...state.favorites, productId],
+        })),
+      isFavorite: (productId) => get().favorites.includes(productId),
+
       // UI State
       isMobileMenuOpen: false,
       setMobileMenuOpen: (open) => set({ isMobileMenuOpen: open }),
@@ -113,6 +128,7 @@ export const useStore = create<StoreState>()(
         locale: state.locale,
         theme: state.theme,
         cart: state.cart,
+        favorites: state.favorites,
         hasSeenIntro: state.hasSeenIntro,
       }),
     }

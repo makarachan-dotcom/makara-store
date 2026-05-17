@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // គំរូ state (ក្នុង production ប្រើ database)
 const siteSettings = {
   maintenanceMode: false,
-  telegramUrl: 'https://t.me/makara_admin',
+  telegramUrl: 'https://t.me/AF4STURF',
   instructionVideoUrl: '',
   heroBanners: [] as string[],
   khqrImages: {

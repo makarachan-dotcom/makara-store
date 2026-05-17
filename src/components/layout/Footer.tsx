@@ -69,9 +69,9 @@ export default function Footer() {
             <h3 className="text-neon font-semibold mb-4 font-khmer">{t('contactAdmin')}</h3>
             <ul className="space-y-2">
               <li>
-                <a href="https://t.me/makara_admin" target="_blank" rel="noopener noreferrer"
+                <a href="https://t.me/AF4STURF" target="_blank" rel="noopener noreferrer"
                    className="text-white/40 hover:text-gold text-sm transition-colors">
-                  Telegram
+                  Telegram @AF4STURF
                 </a>
               </li>
               <li>

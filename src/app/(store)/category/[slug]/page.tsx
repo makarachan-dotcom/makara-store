@@ -1,6 +1,7 @@
 'use client'
 
 // ទំព័រប្រភេទផលិតផល
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import ProductCard from '@/components/home/ProductCard'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -16,8 +17,16 @@ const allProducts = [
   { id: '8', slug: 'discord-nitro', nameKm: 'Discord Nitro - ១ ខែ', nameEn: 'Discord Nitro - 1 Month', price: 4.49, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: false },
 ]
 
+const categoryMap: Record<string, string[]> = {
+  'ChatGPT': ['chatgpt'],
+  'Streaming': ['netflix', 'spotify', 'youtube'],
+  'Design': ['canva', 'adobe'],
+  'Gaming': ['discord'],
+}
+
 export default function CategoryPage({ params }: { params: { slug: string } }) {
   const { t, locale } = useTranslation()
+  const [activeFilter, setActiveFilter] = useState<string>(locale === 'km' ? 'ទាំងអស់' : 'All')
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -42,11 +51,12 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
         {/* តម្រង */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {['ទាំងអស់', 'ChatGPT', 'Streaming', 'Design', 'Gaming'].map((filter, i) => (
+          {[locale === 'km' ? 'ទាំងអស់' : 'All', 'ChatGPT', 'Streaming', 'Design', 'Gaming'].map((filter) => (
             <button
               key={filter}
+              onClick={() => setActiveFilter(filter)}
               className={`px-4 py-2 text-sm rounded-lg border font-khmer transition-all ${
-                i === 0
+                activeFilter === filter
                   ? 'bg-neon/10 border-neon/30 text-neon'
                   : 'border-white/10 text-white/40 hover:border-neon/20 hover:text-white/60'
               }`}
@@ -63,7 +73,14 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           animate="visible"
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
         >
-          {allProducts.map((product) => (
+          {allProducts
+            .filter((product) => {
+              const allLabel = locale === 'km' ? 'ទាំងអស់' : 'All'
+              if (activeFilter === allLabel) return true
+              const keywords = categoryMap[activeFilter] || []
+              return keywords.some((kw) => product.slug.toLowerCase().includes(kw))
+            })
+            .map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
               <ProductCard {...product} />
             </motion.div>
