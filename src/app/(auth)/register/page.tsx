@@ -76,7 +76,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="card-gaming p-6">
-          <h2 className="text-lg font-semibold text-white mb-6 font-khmer text-center">{'\u1785\u17bb\u17a0\u17d2\u179c\u17be\u17a0\u17d2\u1798\u17c4\u17c7'}</h2>
+          <h2 className="text-lg font-semibold text-white mb-6 font-khmer text-center">{'\u1785\u17bb\u17c7\u1788\u17d2\u1798\u17c4\u17c7'}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
               disabled={loading || (!!password && !!confirmPassword && password !== confirmPassword)}
               className="w-full btn-neon disabled:opacity-50"
             >
-              {loading ? '\u1780\u17c6\u1796\u17bb\u1784\u1785\u17bb\u17a0\u17d2\u179c\u17be\u17a0\u17d2\u1798\u17c4\u17c7...' : '\u1785\u17bb\u17a0\u17d2\u179c\u17be\u17a0\u17d2\u1798\u17c4\u17c7'}
+              {loading ? '\u1780\u17c6\u1796\u17bb\u1784\u1785\u17bb\u17c7\u1788\u17d2\u1798\u17c4\u17c7...' : '\u1785\u17bb\u17c7\u1788\u17d2\u1798\u17c4\u17c7'}
             </button>
           </form>
 
@@ -158,7 +158,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-obsidian-50 text-white/30 text-xs">{'\u17ac\u1785\u17bb\u17a0\u17d2\u179c\u17be\u17a0\u17d2\u1798\u17c4\u17c7\u178a\u17c4\u1799'}</span>
+              <span className="px-3 bg-obsidian-50 text-white/30 text-xs">{'\u17ac\u1785\u17bb\u17c7\u1788\u17d2\u1798\u17c4\u17c7\u178a\u17c4\u1799'}</span>
             </div>
           </div>
 

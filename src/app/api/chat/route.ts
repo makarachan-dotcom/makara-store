@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const KIMI_API_KEY = process.env.KIMI_API_KEY || ''
-const KIMI_API_URL = 'https://api.moonshot.cn/v1/chat/completions'
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || ''
+const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
 
 const SYSTEM_PROMPT = `You are the AI assistant for Makara Store — a premium digital store specializing in gaming products, ChatGPT upgrades, digital cards, and more. You are helpful, friendly, and professional.
 
@@ -10,7 +10,7 @@ Key information:
 - We sell: Gaming products, ChatGPT Plus/Pro upgrades, VISA virtual cards, digital products
 - Payment methods: ABA Bank, ACLEDA Bank, Wing Bank
 - For urgent support, customers can contact Admin on Telegram: @AF4STURF
-- Website: makara-store.vercel.app
+- Website: makarach4n.tokenized.name
 
 Always be helpful and concise. If you don't know something specific about an order or product, direct the customer to contact Admin on Telegram @AF4STURF.
 Respond in the same language the user writes in (Khmer or English).`
@@ -26,21 +26,21 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!KIMI_API_KEY) {
+    if (!NVIDIA_API_KEY) {
       return NextResponse.json(
         { reply: getOfflineResponse(messages[messages.length - 1]?.content || '') },
         { status: 200 }
       )
     }
 
-    const response = await fetch(KIMI_API_URL, {
+    const response = await fetch(NVIDIA_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${KIMI_API_KEY}`,
+        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'kimi-k2-0520',
+        model: 'meta/llama-4-maverick-17b-128e-instruct',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages.slice(-10),
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.text()
-      console.error('Kimi API error:', errorData)
+      console.error('NVIDIA API error:', errorData)
       return NextResponse.json(
         { reply: getOfflineResponse(messages[messages.length - 1]?.content || '') },
         { status: 200 }
