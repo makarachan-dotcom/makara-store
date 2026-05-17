@@ -1,32 +1,66 @@
 'use client'
 
-// ទំព័រប្រភេទផលិតផល
-import { useState } from 'react'
+// ទំព័រប្រភេទផលិតផល - Real Version with Prisma
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import ProductCard from '@/components/home/ProductCard'
 import { useTranslation } from '@/hooks/useTranslation'
 
-const allProducts = [
-  { id: '1', slug: 'chatgpt-plus-1month', nameKm: 'ChatGPT Plus - ១ ខែ', nameEn: 'ChatGPT Plus - 1 Month', price: 9.99, originalPrice: 20.00, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: true },
-  { id: '2', slug: 'chatgpt-plus-3months', nameKm: 'ChatGPT Plus - ៣ ខែ', nameEn: 'ChatGPT Plus - 3 Months', price: 24.99, originalPrice: 60.00, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: true },
-  { id: '3', slug: 'netflix-premium', nameKm: 'Netflix Premium - ១ ខែ', nameEn: 'Netflix Premium - 1 Month', price: 5.99, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: false },
-  { id: '4', slug: 'spotify-premium', nameKm: 'Spotify Premium - ១ ខែ', nameEn: 'Spotify Premium - 1 Month', price: 3.99, image: '/images/logo.jpg', stockStatus: 'LOW_STOCK', isFeatured: false },
-  { id: '5', slug: 'youtube-premium', nameKm: 'YouTube Premium - ១ ខែ', nameEn: 'YouTube Premium - 1 Month', price: 4.99, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: false },
-  { id: '6', slug: 'canva-pro', nameKm: 'Canva Pro - ១ ខែ', nameEn: 'Canva Pro - 1 Month', price: 6.99, originalPrice: 12.99, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: true },
-  { id: '7', slug: 'adobe-creative', nameKm: 'Adobe Creative Cloud - ១ ខែ', nameEn: 'Adobe Creative Cloud - 1 Month', price: 14.99, image: '/images/logo.jpg', stockStatus: 'PRE_ORDER', isFeatured: false },
-  { id: '8', slug: 'discord-nitro', nameKm: 'Discord Nitro - ១ ខែ', nameEn: 'Discord Nitro - 1 Month', price: 4.49, image: '/images/logo.jpg', stockStatus: 'IN_STOCK', isFeatured: false },
-]
+interface Category {
+  id: string
+  slug: string
+  nameKm: string
+  nameEn: string
+}
 
-const categoryMap: Record<string, string[]> = {
-  'ChatGPT': ['chatgpt'],
-  'Streaming': ['netflix', 'spotify', 'youtube'],
-  'Design': ['canva', 'adobe'],
-  'Gaming': ['discord'],
+interface Product {
+  id: string
+  slug: string
+  nameKm: string
+  nameEn: string
+  price: number
+  originalPrice?: number | null
+  image: string | null
+  stockStatus: string
+  isFeatured: boolean
+  category?: Category | null
 }
 
 export default function CategoryPage({ params }: { params: { slug: string } }) {
   const { t, locale } = useTranslation()
-  const [activeFilter, setActiveFilter] = useState<string>(locale === 'km' ? 'ទាំងអស់' : 'All')
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [activeFilter, setActiveFilter] = useState<string>('all')
+  const [loading, setLoading] = useState(true)
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [productsRes, categoriesRes] = await Promise.all([
+        fetch('/api/products'),
+        fetch('/api/admin/categories'),
+      ])
+      const productsData = await productsRes.json()
+      const categoriesData = await categoriesRes.json()
+      setProducts(productsData.products || [])
+      setCategories(categoriesData.categories || [])
+    } catch {
+      setProducts([])
+      setCategories([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+    if (params.slug && params.slug !== 'all') {
+      setActiveFilter(params.slug)
+    }
+  }, [fetchData, params.slug])
+
+  const filteredProducts = activeFilter === 'all'
+    ? products
+    : products.filter((p) => p.category?.slug === activeFilter)
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -51,41 +85,54 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
 
         {/* តម្រង */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {[locale === 'km' ? 'ទាំងអស់' : 'All', 'ChatGPT', 'Streaming', 'Design', 'Gaming'].map((filter) => (
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`px-4 py-2 text-sm rounded-lg border font-khmer transition-all ${
+              activeFilter === 'all'
+                ? 'bg-neon/10 border-neon/30 text-neon'
+                : 'border-white/10 text-white/40 hover:border-neon/20 hover:text-white/60'
+            }`}
+          >
+            {locale === 'km' ? 'ទាំងអស់' : 'All'}
+          </button>
+          {categories.map((cat) => (
             <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
+              key={cat.id}
+              onClick={() => setActiveFilter(cat.slug)}
               className={`px-4 py-2 text-sm rounded-lg border font-khmer transition-all ${
-                activeFilter === filter
+                activeFilter === cat.slug
                   ? 'bg-neon/10 border-neon/30 text-neon'
                   : 'border-white/10 text-white/40 hover:border-neon/20 hover:text-white/60'
               }`}
             >
-              {filter}
+              {locale === 'km' ? cat.nameKm : cat.nameEn}
             </button>
           ))}
         </div>
 
         {/* ក្រឡាចត្រង្គផលិតផល */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-        >
-          {allProducts
-            .filter((product) => {
-              const allLabel = locale === 'km' ? 'ទាំងអស់' : 'All'
-              if (activeFilter === allLabel) return true
-              const keywords = categoryMap[activeFilter] || []
-              return keywords.some((kw) => product.slug.toLowerCase().includes(kw))
-            })
-            .map((product) => (
-            <motion.div key={product.id} variants={itemVariants}>
-              <ProductCard {...product} />
-            </motion.div>
-          ))}
-        </motion.div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+          >
+            {filteredProducts.map((product) => (
+              <motion.div key={product.id} variants={itemVariants}>
+                <ProductCard {...product} image={product.image || '/images/logo.jpg'} originalPrice={product.originalPrice ?? undefined} />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <p className="text-white/30 text-center py-8 font-khmer">
+            {locale === 'km' ? 'មិនមានផលិតផលក្នុងប្រភេទនេះ' : 'No products in this category'}
+          </p>
+        )}
       </div>
     </div>
   )
