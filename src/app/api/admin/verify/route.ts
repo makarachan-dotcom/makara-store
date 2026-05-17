@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const token = createAdminToken(session.user.email)
+  const token = await createAdminToken(session.user.email)
   const response = NextResponse.json({ success: true })
   response.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,

@@ -1,5 +1,3 @@
-import { createHmac } from 'crypto'
-
 const COOKIE_NAME = 'admin-verified'
 const TOKEN_TTL = 60 * 60 * 24 // 24 hours
 
@@ -9,18 +7,33 @@ function getSecret(): string {
   return secret
 }
 
-function hmac(data: string): string {
-  return createHmac('sha256', getSecret()).update(data).digest('hex')
+function hexEncode(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
 }
 
-export function createAdminToken(email: string): string {
+async function hmac(data: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(getSecret()),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(data))
+  return hexEncode(signature)
+}
+
+export async function createAdminToken(email: string): Promise<string> {
   const expires = Math.floor(Date.now() / 1000) + TOKEN_TTL
   const payload = `${email}:${expires}`
-  const signature = hmac(payload)
+  const signature = await hmac(payload)
   return `${payload}:${signature}`
 }
 
-export function verifyAdminToken(token: string, email: string): boolean {
+export async function verifyAdminToken(token: string, email: string): Promise<boolean> {
   const parts = token.split(':')
   if (parts.length !== 3) return false
 
@@ -30,7 +43,7 @@ export function verifyAdminToken(token: string, email: string): boolean {
   const expires = parseInt(expiresStr, 10)
   if (isNaN(expires) || expires < Math.floor(Date.now() / 1000)) return false
 
-  const expectedSignature = hmac(`${tokenEmail}:${expiresStr}`)
+  const expectedSignature = await hmac(`${tokenEmail}:${expiresStr}`)
   return signature === expectedSignature
 }
 

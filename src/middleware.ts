@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
   const adminToken = request.cookies.get(COOKIE_NAME)?.value
   const email = token.email as string
-  if (!adminToken || !verifyAdminToken(adminToken, email)) {
+  if (!adminToken || !(await verifyAdminToken(adminToken, email))) {
     const verifyUrl = new URL('/admin/verify', request.url)
     verifyUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(verifyUrl)
