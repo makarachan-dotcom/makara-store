@@ -9,6 +9,7 @@ interface OrderItem {
   productId: string
   quantity: number
   price: number
+  product?: { nameKm: string; nameEn: string; image: string | null }
 }
 
 interface Order {
@@ -146,7 +147,16 @@ export default function AdminOrdersPage() {
                     transition={{ delay: i * 0.03 }}
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
                   >
-                    <td className="px-4 py-3 text-neon font-mono text-xs">{order.orderNumber}</td>
+                    <td className="px-4 py-3">
+                      <p className="text-neon font-mono text-xs">{order.orderNumber}</p>
+                      <div className="mt-1 space-y-0.5">
+                        {order.items.map((item) => (
+                          <p key={item.id} className="text-white/40 text-xs">
+                            {item.product?.nameEn || item.productId} x{item.quantity}
+                          </p>
+                        ))}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <p className="text-white/60 text-xs">{order.user?.name || 'N/A'}</p>
                       <p className="text-white/30 text-xs">{order.user?.email}</p>
