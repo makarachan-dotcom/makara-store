@@ -1,19 +1,19 @@
 // គម្រោង Prisma Schema សម្រាប់ Makara Store
-// មូលដ្ឋានទិន្នន័យ PostgreSQL
+// មូលដ្ឋានទិន្នន័យ MongoDB
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 // ===== ផ្នែកផ្ទៀងផ្ទាត់អត្តសញ្ញាណ =====
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
   email         String    @unique
   emailVerified DateTime?
@@ -34,17 +34,17 @@ model User {
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,9 +54,9 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -64,6 +64,7 @@ model Session {
 }
 
 model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   identifier String
   token      String   @unique
   expires    DateTime
@@ -80,10 +81,10 @@ enum UserRole {
 // ===== ផ្នែកផលិតផល =====
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   slug        String    @unique
-  nameKm      String    // ឈ្មោះជាភាសាខ្មែរ
-  nameEn      String    // ឈ្មោះជាភាសាអង់គ្លេស
+  nameKm      String
+  nameEn      String
   icon        String?
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
@@ -96,30 +97,30 @@ model Category {
 }
 
 model Product {
-  id              String   @id @default(cuid())
-  slug            String   @unique
-  nameKm          String   // ឈ្មោះផលិតផលជាភាសាខ្មែរ
-  nameEn          String   // ឈ្មោះផលិតផលជាភាសាអង់គ្លេស
-  descriptionKm   String?  @db.Text  // ការពិពណ៌នាជាភាសាខ្មែរ
-  descriptionEn   String?  @db.Text  // ការពិពណ៌នាជាភាសាអង់គ្លេស
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  slug            String      @unique
+  nameKm          String
+  nameEn          String
+  descriptionKm   String?
+  descriptionEn   String?
   price           Float
   originalPrice   Float?
-  currency        String   @default("USD")
+  currency        String      @default("USD")
   image           String?
-  images          String[] // រូបភាពបន្ថែម
-  categoryId      String
+  images          String[]
+  categoryId      String      @db.ObjectId
   stockStatus     StockStatus @default(IN_STOCK)
-  stockQuantity   Int      @default(0)
-  isFeatured      Boolean  @default(false)
-  isActive        Boolean  @default(true)
-  sourceUrl       String?  // URL ពីគេហទំព័រដើម (vipplus.pro)
-  sourceId        String?  @unique // ID ពីគេហទំព័រដើម
-  metadata        Json?    // ទិន្នន័យបន្ថែម
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  stockQuantity   Int         @default(0)
+  isFeatured      Boolean     @default(false)
+  isActive        Boolean     @default(true)
+  sourceUrl       String?
+  sourceId        String?     @unique
+  metadata        Json?
+  sortOrder       Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  category        Category @relation(fields: [categoryId], references: [id])
+  category        Category    @relation(fields: [categoryId], references: [id])
   orderItems      OrderItem[]
   favorites       Favorite[]
 
@@ -136,33 +137,33 @@ enum StockStatus {
 // ===== ផ្នែកការបញ្ជាទិញ =====
 
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
-  userId          String
-  status          OrderStatus @default(PENDING)
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber     String        @unique
+  userId          String        @db.ObjectId
+  status          OrderStatus   @default(PENDING)
   totalAmount     Float
-  currency        String      @default("USD")
+  currency        String        @default("USD")
   paymentMethod   PaymentMethod?
-  paymentProof    String?     // រូបភាពបង្កាន់ដៃបង់ប្រាក់
+  paymentProof    String?
   receiptStatus   ReceiptStatus @default(PENDING)
-  adminNote       String?     @db.Text
-  adjustedAmount  Float?      // ចំនួនទឹកប្រាក់ដែល Admin កែប្រែ
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  adminNote       String?
+  adjustedAmount  Float?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  user            User        @relation(fields: [userId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
   items           OrderItem[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id          String  @id @default(cuid())
-  orderId     String
-  productId   String
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String  @db.ObjectId
+  productId   String  @db.ObjectId
   quantity    Int     @default(1)
   price       Float
-  metadata    Json?   // ទិន្នន័យបន្ថែមដូចជា ព័ត៌មានគណនី ChatGPT
+  metadata    Json?
 
   order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product @relation(fields: [productId], references: [id])
@@ -197,9 +198,9 @@ enum ReceiptStatus {
 // ===== ផ្នែកចំណូលចិត្ត =====
 
 model Favorite {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
   createdAt DateTime @default(now())
 
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -212,14 +213,14 @@ model Favorite {
 // ===== ផ្នែក KHQR =====
 
 model KhqrCode {
-  id          String        @id @default(cuid())
-  bank        PaymentMethod
-  imageUrl    String
-  accountName String?
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  bank          PaymentMethod
+  imageUrl      String
+  accountName   String?
   accountNumber String?
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@map("khqr_codes")
 }
@@ -227,16 +228,16 @@ model KhqrCode {
 // ===== ផ្នែកការជូនដំណឹង =====
 
 model Announcement {
-  id          String   @id @default(cuid())
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
   titleKm     String
   titleEn     String
-  contentKm   String   @db.Text
-  contentEn   String   @db.Text
+  contentKm   String
+  contentEn   String
   type        AnnouncementType @default(INFO)
-  isActive    Boolean  @default(true)
-  priority    Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean          @default(true)
+  priority    Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@map("announcements")
 }
@@ -251,17 +252,17 @@ enum AnnouncementType {
 // ===== ផ្នែកការកំណត់ Admin =====
 
 model SiteSetting {
-  id          String  @id @default(cuid())
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
   key         String  @unique
-  value       String  @db.Text
-  type        String  @default("string") // string, boolean, json, image
+  value       String
+  type        String  @default("string")
   description String?
 
   @@map("site_settings")
 }
 
 model HeroBanner {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   imageUrl    String
   linkUrl     String?
   titleKm     String?
@@ -277,10 +278,10 @@ model HeroBanner {
 // ===== ផ្នែក Chat =====
 
 model ChatMessage {
-  id        String   @id @default(cuid())
-  userId    String?
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?  @db.ObjectId
   role      ChatRole
-  content   String   @db.Text
+  content   String
   sessionId String
   createdAt DateTime @default(now())
 
@@ -298,15 +299,15 @@ enum ChatRole {
 // ===== ផ្នែកវីដេអូណែនាំ =====
 
 model InstructionVideo {
-  id          String   @id @default(cuid())
-  titleKm     String
-  titleEn     String
-  videoUrl    String?
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  titleKm      String
+  titleEn      String
+  videoUrl     String?
   thumbnailUrl String?
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("instruction_videos")
 }
@@ -314,14 +315,14 @@ model InstructionVideo {
 // ===== ផ្នែកកំណត់ហេតុ Scraper =====
 
 model ScraperLog {
-  id          String   @id @default(cuid())
-  status      String
-  itemsFound  Int      @default(0)
-  itemsUpdated Int     @default(0)
-  itemsCreated Int     @default(0)
-  errors      String?  @db.Text
-  duration    Int?     // រយៈពេល (មីលីវិនាទី)
-  createdAt   DateTime @default(now())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  status       String
+  itemsFound   Int      @default(0)
+  itemsUpdated Int      @default(0)
+  itemsCreated Int      @default(0)
+  errors       String?
+  duration     Int?
+  createdAt    DateTime @default(now())
 
   @@map("scraper_logs")
 }
