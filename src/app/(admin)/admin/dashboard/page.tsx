@@ -46,15 +46,24 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0 })
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   const fetchDashboard = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/dashboard')
       const data = await res.json()
+      if (!res.ok) {
+        setFetchError(data.error || 'Failed to load dashboard')
+        return
+      }
+      setFetchError(null)
       setStats(data.stats || { totalOrders: 0, totalRevenue: 0, totalUsers: 0, totalProducts: 0 })
       setRecentOrders(data.recentOrders || [])
-    } catch { /* fetch failed */ }
-    finally { setLoading(false) }
+    } catch {
+      setFetchError('Network error - could not load dashboard')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { fetchDashboard() }, [fetchDashboard])
@@ -80,6 +89,13 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-display font-bold text-white">ផ្ទាំងព័ត៌មាន</h1>
         <span className="text-sm text-white/30">Admin: chanmakara672@gmail.com</span>
       </div>
+
+      {fetchError && (
+        <div className="card-gaming p-4 border border-red-500/20">
+          <p className="text-red-400 text-sm">{fetchError}</p>
+          <button onClick={fetchDashboard} className="text-neon text-xs mt-2 hover:underline">Retry</button>
+        </div>
+      )}
 
       {/* ស្ថិតិ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

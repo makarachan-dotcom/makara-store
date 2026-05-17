@@ -102,7 +102,10 @@ export async function PUT(request: NextRequest) {
     }
 
     if (updateData.price !== undefined) updateData.price = parseFloat(String(updateData.price))
-    if (updateData.originalPrice !== undefined) updateData.originalPrice = parseFloat(String(updateData.originalPrice))
+    if (updateData.originalPrice !== undefined) {
+      const parsed = parseFloat(String(updateData.originalPrice))
+      updateData.originalPrice = isNaN(parsed) ? null : parsed
+    }
 
     const product = await prisma.product.update({
       where: { id },
