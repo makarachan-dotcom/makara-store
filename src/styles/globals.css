@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* នាំចូល Khmer Font */
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --color-obsidian: #0B0F19;
+    --color-neon: #00F2FE;
+    --color-gold: #FFD700;
+  }
+
+  body {
+    @apply bg-obsidian text-white font-khmer;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar រចនាប័ទ្ម Gaming */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0B0F19;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00F2FE, #0B0F19);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00F2FE;
+  }
+}
+
+@layer components {
+  /* ប៊ូតុង Neon ចម្បង */
+  .btn-neon {
+    @apply relative px-6 py-3 font-semibold text-obsidian bg-neon rounded-lg
+           transition-all duration-300 ease-out
+           hover:shadow-[0_0_15px_rgba(0,242,254,0.5),0_0_30px_rgba(0,242,254,0.3)]
+           active:scale-95;
+  }
+
+  /* ប៊ូតុង Gold */
+  .btn-gold {
+    @apply relative px-6 py-3 font-semibold text-obsidian bg-gold rounded-lg
+           transition-all duration-300 ease-out
+           hover:shadow-[0_0_15px_rgba(255,215,0,0.5),0_0_30px_rgba(255,215,0,0.3)]
+           active:scale-95;
+  }
+
+  /* ប៊ូតុង Outline */
+  .btn-outline-neon {
+    @apply relative px-6 py-3 font-semibold text-neon border border-neon rounded-lg
+           transition-all duration-300 ease-out bg-transparent
+           hover:bg-neon/10 hover:shadow-[0_0_10px_rgba(0,242,254,0.3)]
+           active:scale-95;
+  }
+
+  /* កាត Gaming */
+  .card-gaming {
+    @apply relative bg-obsidian-50 border border-neon/10 rounded-xl
+           overflow-hidden transition-all duration-300
+           hover:border-neon/30 hover:shadow-[0_0_20px_rgba(0,242,254,0.1)];
+  }
+
+  /* ក្រឡាចត្រង្គ Cyber */
+  .cyber-grid-bg {
+    background-image: 
+      linear-gradient(rgba(0,242,254,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,242,254,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* បន្ទាត់ Scan */
+  .scan-line::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(
+      transparent 0%,
+      rgba(0,242,254,0.03) 50%,
+      transparent 100%
+    );
+    animation: scanLine 4s linear infinite;
+  }
+
+  /* Text Glow */
+  .text-glow-neon {
+    text-shadow: 0 0 10px rgba(0,242,254,0.5), 0 0 20px rgba(0,242,254,0.3);
+  }
+
+  .text-glow-gold {
+    text-shadow: 0 0 10px rgba(255,215,0,0.5), 0 0 20px rgba(255,215,0,0.3);
+  }
+
+  /* Glass Effect */
+  .glass {
+    @apply bg-obsidian-50/80 backdrop-blur-xl border border-white/5;
+  }
+}
+
+@layer utilities {
+  /* Gradient Text */
+  .gradient-text-neon {
+    @apply bg-gradient-to-r from-neon to-neon-300 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-gold {
+    @apply bg-gradient-to-r from-gold to-gold-300 bg-clip-text text-transparent;
+  }
+}
