@@ -66,19 +66,40 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
-        if (!user.email) return false
+        const googleEmail = (profile as { email?: string })?.email || user.email
+        if (!googleEmail) return false
+
+        // Check if this Google account is linked to a different user
+        const linkedAccount = await prisma.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+          include: { user: true },
+        })
+
+        if (linkedAccount && linkedAccount.user.email !== googleEmail) {
+          // Google account is linked to the wrong user — delete the stale link
+          await prisma.account.delete({
+            where: { id: linkedAccount.id },
+          })
+        }
+
+        // Ensure a User record exists for this Google email
         const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
+          where: { email: googleEmail },
         })
         if (!existingUser) {
           await prisma.user.create({
             data: {
-              email: user.email,
-              name: user.name || user.email.split('@')[0],
+              email: googleEmail,
+              name: user.name || googleEmail.split('@')[0],
               image: user.image,
-              role: user.email === ADMIN_EMAIL ? 'ADMIN' : 'USER',
+              role: googleEmail === ADMIN_EMAIL ? 'ADMIN' : 'USER',
             },
           })
         }
@@ -90,10 +111,14 @@ export const authOptions: NextAuthOptions = {
       if (new URL(url).origin === baseUrl) return url
       return baseUrl
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.role = (user as { role?: string }).role || 'USER'
         token.id = user.id
+      }
+      // Use Google's email directly to prevent stale DB email in token
+      if (account?.provider === 'google' && (profile as { email?: string })?.email) {
+        token.email = (profile as { email?: string }).email
       }
       if (token.email === ADMIN_EMAIL) {
         token.role = 'ADMIN'
