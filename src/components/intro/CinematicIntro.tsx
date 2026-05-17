@@ -1,25 +1,44 @@
 'use client'
 
-// ផ្ទាំង Overlay ចម្បង UE5 - បង្ហាញនៅពេលអ្នកប្រើចូលមើលលើកដំបូង
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store/useStore'
 import Image from 'next/image'
 
+const SESSION_KEY = 'makara-intro-seen'
+
 export default function CinematicIntro() {
   const { hasSeenIntro, setHasSeenIntro } = useStore()
   const [isVisible, setIsVisible] = useState(false)
+  const dismissed = useRef(false)
+
+  const dismiss = useCallback(() => {
+    if (dismissed.current) return
+    dismissed.current = true
+    setIsVisible(false)
+    setHasSeenIntro(true)
+    try { sessionStorage.setItem(SESSION_KEY, '1') } catch {}
+  }, [setHasSeenIntro])
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem(SESSION_KEY)) {
+        setHasSeenIntro(true)
+        return
+      }
+    } catch {}
+
     if (!hasSeenIntro) {
       setIsVisible(true)
-      const timer = setTimeout(() => {
+      const timer = setTimeout(dismiss, 1500)
+      const safety = setTimeout(() => {
+        dismissed.current = true
         setIsVisible(false)
         setHasSeenIntro(true)
-      }, 3500)
-      return () => clearTimeout(timer)
+      }, 3000)
+      return () => { clearTimeout(timer); clearTimeout(safety) }
     }
-  }, [hasSeenIntro, setHasSeenIntro])
+  }, [hasSeenIntro, setHasSeenIntro, dismiss])
 
   return (
     <AnimatePresence>
@@ -28,44 +47,26 @@ export default function CinematicIntro() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-obsidian"
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-obsidian cursor-pointer select-none"
+          onClick={dismiss}
+          onTouchStart={dismiss}
+          role="button"
+          tabIndex={0}
+          aria-label="Skip intro"
         >
-          {/* ផ្ទៃខាងក្រោយ Grid */}
           <div className="absolute inset-0 cyber-grid-bg opacity-20" />
 
-          {/* បន្ទាត់ Scan */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              className="absolute inset-x-0 h-32"
-              style={{
-                background:
-                  'linear-gradient(transparent, rgba(0,242,254,0.05), transparent)',
-              }}
-              animate={{ y: ['-100%', '800%'] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            />
-          </div>
-
-          {/* មាតិកាកណ្តាល */}
-          <div className="relative flex flex-col items-center gap-6">
-            {/* ឡូហ្គោ */}
+          <div className="relative flex flex-col items-center gap-6 pointer-events-none">
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
+              transition={{ delay: 0.1, duration: 0.4, ease: 'easeOut' }}
               className="relative"
             >
-              <motion.div
-                animate={{
-                  boxShadow: [
-                    '0 0 20px rgba(0,242,254,0.3)',
-                    '0 0 60px rgba(0,242,254,0.6)',
-                    '0 0 20px rgba(0,242,254,0.3)',
-                  ],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
+              <div
                 className="rounded-full overflow-hidden w-32 h-32 md:w-40 md:h-40"
+                style={{ boxShadow: '0 0 30px rgba(0,242,254,0.4)' }}
               >
                 <Image
                   src="/images/logo.jpg"
@@ -75,35 +76,25 @@ export default function CinematicIntro() {
                   className="object-cover"
                   priority
                 />
-              </motion.div>
+              </div>
             </motion.div>
 
-            {/* អត្ថបទ UE5 */}
             <motion.div
-              initial={{ y: 30, opacity: 0 }}
+              initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
               className="text-center"
             >
-              <motion.h1
-                className="text-2xl md:text-4xl font-display font-bold tracking-wider"
-                animate={{
-                  textShadow: [
-                    '0 0 10px rgba(0,242,254,0.5)',
-                    '0 0 30px rgba(0,242,254,0.8)',
-                    '0 0 10px rgba(0,242,254,0.5)',
-                  ],
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+              <h1 className="text-2xl md:text-4xl font-display font-bold tracking-wider"
+                  style={{ textShadow: '0 0 20px rgba(0,242,254,0.6)' }}>
                 <span className="text-neon">Made with</span>{' '}
                 <span className="text-gold">Unreal Engine 5</span>
-              </motion.h1>
+              </h1>
 
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.4, duration: 0.5 }}
+                transition={{ delay: 0.4, duration: 0.3 }}
                 className="mt-3 text-lg md:text-xl text-white/60 font-khmer"
               >
                 By{' '}
@@ -111,18 +102,16 @@ export default function CinematicIntro() {
               </motion.p>
             </motion.div>
 
-            {/* រង្វង់ Pulse */}
-            <motion.div
-              className="absolute inset-0 -z-10"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity }}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.8] }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+              className="text-white/30 text-xs mt-2 font-khmer"
             >
-              <div className="w-full h-full rounded-full border border-neon/20" />
-            </motion.div>
+              ចុចដើម្បីរំលង · Tap to skip
+            </motion.p>
           </div>
 
-          {/* ស៊ុម Corners */}
           <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-neon/40" />
           <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-neon/40" />
           <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-neon/40" />
