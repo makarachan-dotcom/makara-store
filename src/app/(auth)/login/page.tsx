@@ -5,7 +5,6 @@ import { signIn } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 
 type LoginStep = 'idle' | 'authenticating' | 'retrieving' | 'completed'
 
@@ -16,8 +15,6 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [loginStep, setLoginStep] = useState<LoginStep>('idle')
-  const router = useRouter()
-
   const stepLabels: Record<LoginStep, { km: string; en: string }> = {
     idle: { km: '', en: '' },
     authenticating: { km: 'កំពុងផ្ទៀងផ្ទាត់...', en: 'Authenticating...' },
@@ -27,10 +24,12 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (loginStep === 'completed') {
-      const timer = setTimeout(() => router.push('/'), 800)
+      const timer = setTimeout(() => {
+        window.location.href = '/'
+      }, 800)
       return () => clearTimeout(timer)
     }
-  }, [loginStep, router])
+  }, [loginStep])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
