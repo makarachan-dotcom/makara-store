@@ -89,7 +89,7 @@ function AdminVerifyContent() {
       if (res.ok) {
         setVerified(true)
         setTimeout(() => {
-          router.push(callbackUrl)
+          window.location.href = callbackUrl
         }, 800)
       } else {
         const data = await res.json()

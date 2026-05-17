@@ -12,6 +12,212 @@
     --color-gold: #FFD700;
   }
 
+  /* Light Theme */
+  [data-theme="light"] {
+    --color-obsidian: #F5F7FA;
+    --color-neon: #0891B2;
+    --color-gold: #D97706;
+  }
+
+  [data-theme="light"] body {
+    @apply text-gray-900;
+    background-color: #F5F7FA;
+  }
+
+  [data-theme="light"] .bg-obsidian {
+    background-color: #F5F7FA;
+  }
+
+  [data-theme="light"] .bg-obsidian-50\/80,
+  [data-theme="light"] .bg-obsidian-50\/50,
+  [data-theme="light"] .bg-obsidian-50 {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  [data-theme="light"] .bg-obsidian-100 {
+    background-color: #EDF0F5;
+  }
+
+  [data-theme="light"] .bg-obsidian\/80,
+  [data-theme="light"] .bg-obsidian\/95 {
+    background-color: rgba(245, 247, 250, 0.95);
+  }
+
+  [data-theme="light"] .text-white {
+    color: #1a202c;
+  }
+
+  [data-theme="light"] .text-white\/70,
+  [data-theme="light"] .text-white\/60 {
+    color: rgba(26, 32, 44, 0.7);
+  }
+
+  [data-theme="light"] .text-white\/50,
+  [data-theme="light"] .text-white\/40,
+  [data-theme="light"] .text-white\/30,
+  [data-theme="light"] .text-white\/20 {
+    color: rgba(26, 32, 44, 0.5);
+  }
+
+  [data-theme="light"] .border-white\/10,
+  [data-theme="light"] .border-white\/5 {
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="light"] .border-neon\/10,
+  [data-theme="light"] .border-neon\/20 {
+    border-color: rgba(8, 145, 178, 0.2);
+  }
+
+  [data-theme="light"] .text-neon {
+    color: #0891B2;
+  }
+
+  [data-theme="light"] .text-gold {
+    color: #D97706;
+  }
+
+  [data-theme="light"] .bg-neon {
+    background-color: #0891B2;
+  }
+
+  [data-theme="light"] .bg-gold {
+    background-color: #D97706;
+  }
+
+  [data-theme="light"] .glass {
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  [data-theme="light"] .card-gaming {
+    background-color: #FFFFFF;
+    border-color: rgba(8, 145, 178, 0.15);
+  }
+
+  [data-theme="light"] .card-gaming:hover {
+    border-color: rgba(8, 145, 178, 0.3);
+  }
+
+  [data-theme="light"] .cyber-grid-bg {
+    background-image:
+      linear-gradient(rgba(8,145,178,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(8,145,178,0.04) 1px, transparent 1px);
+  }
+
+  [data-theme="light"] .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  [data-theme="light"] .bg-white\/5 {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  [data-theme="light"] ::-webkit-scrollbar-track {
+    background: #F5F7FA;
+  }
+
+  [data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0891B2, #F5F7FA);
+  }
+
+  /* Gaming Theme */
+  [data-theme="gaming"] {
+    --color-obsidian: #0a0015;
+    --color-neon: #FF00FF;
+    --color-gold: #00FF88;
+  }
+
+  [data-theme="gaming"] body {
+    background-color: #0a0015;
+  }
+
+  [data-theme="gaming"] .bg-obsidian {
+    background-color: #0a0015;
+  }
+
+  [data-theme="gaming"] .bg-obsidian-50\/80,
+  [data-theme="gaming"] .bg-obsidian-50\/50,
+  [data-theme="gaming"] .bg-obsidian-50 {
+    background-color: rgba(20, 0, 40, 0.8);
+  }
+
+  [data-theme="gaming"] .bg-obsidian-100 {
+    background-color: #120025;
+  }
+
+  [data-theme="gaming"] .text-neon {
+    color: #FF00FF;
+  }
+
+  [data-theme="gaming"] .text-gold {
+    color: #00FF88;
+  }
+
+  [data-theme="gaming"] .bg-neon {
+    background-color: #FF00FF;
+  }
+
+  [data-theme="gaming"] .bg-gold {
+    background-color: #00FF88;
+  }
+
+  [data-theme="gaming"] .border-neon\/10,
+  [data-theme="gaming"] .border-neon\/20 {
+    border-color: rgba(255, 0, 255, 0.2);
+  }
+
+  [data-theme="gaming"] .border-neon\/30 {
+    border-color: rgba(255, 0, 255, 0.3);
+  }
+
+  [data-theme="gaming"] .text-glow-neon {
+    text-shadow: 0 0 10px rgba(255,0,255,0.5), 0 0 20px rgba(255,0,255,0.3);
+  }
+
+  [data-theme="gaming"] .text-glow-gold {
+    text-shadow: 0 0 10px rgba(0,255,136,0.5), 0 0 20px rgba(0,255,136,0.3);
+  }
+
+  [data-theme="gaming"] .btn-neon {
+    background-color: #FF00FF;
+    box-shadow: 0 0 15px rgba(255,0,255,0.3);
+  }
+
+  [data-theme="gaming"] .btn-gold {
+    background-color: #00FF88;
+    color: #0a0015;
+  }
+
+  [data-theme="gaming"] .cyber-grid-bg {
+    background-image:
+      linear-gradient(rgba(255,0,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,0,255,0.04) 1px, transparent 1px);
+  }
+
+  [data-theme="gaming"] .glass {
+    background-color: rgba(20, 0, 40, 0.8);
+    border-color: rgba(255, 0, 255, 0.1);
+  }
+
+  [data-theme="gaming"] .card-gaming {
+    border-color: rgba(255, 0, 255, 0.15);
+  }
+
+  [data-theme="gaming"] .card-gaming:hover {
+    border-color: rgba(255, 0, 255, 0.4);
+    box-shadow: 0 0 20px rgba(255,0,255,0.15);
+  }
+
+  [data-theme="gaming"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #FF00FF, #0a0015);
+  }
+
+  [data-theme="gaming"] ::-webkit-scrollbar-track {
+    background: #0a0015;
+  }
+
   body {
     @apply bg-obsidian text-white font-khmer;
     -webkit-font-smoothing: antialiased;
