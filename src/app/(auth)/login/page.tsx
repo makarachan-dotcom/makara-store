@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
+type LoginStep = 'idle' | 'authenticating' | 'retrieving' | 'completed'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,21 +15,39 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [loginStep, setLoginStep] = useState<LoginStep>('idle')
   const router = useRouter()
+
+  const stepLabels: Record<LoginStep, { km: string; en: string }> = {
+    idle: { km: '', en: '' },
+    authenticating: { km: 'កំពុងផ្ទៀងផ្ទាត់...', en: 'Authenticating...' },
+    retrieving: { km: 'កំពុងទាញយកទិន្នន័យរបស់អ្នក...', en: 'Retrieving your data...' },
+    completed: { km: 'រួចរាល់! កំពុងបញ្ជូន...', en: 'Completed! Redirecting...' },
+  }
+
+  useEffect(() => {
+    if (loginStep === 'completed') {
+      const timer = setTimeout(() => router.push('/'), 800)
+      return () => clearTimeout(timer)
+    }
+  }, [loginStep, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setSuccess(false)
 
     if (!email || !password) {
-      setError('\u179f\u17bc\u1798\u1794\u17c6\u1796\u17c1\u1789\u17a2\u17ca\u17b8\u1798\u17c2\u179b \u1793\u17b7\u1784\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17d4')
+      setError('សូមបំពេញអ៊ីមែល និងពាក្យសម្ងាត់។')
       return
     }
 
     setLoading(true)
+    setLoginStep('authenticating')
+
     try {
+      await new Promise((r) => setTimeout(r, 600))
+      setLoginStep('retrieving')
+
       const result = await signIn('credentials', {
         email,
         password,
@@ -35,13 +55,14 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError('\u17a2\u17ca\u17b8\u1798\u17c2\u179b \u17ac\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u1798\u17b7\u1793\u178f\u17d2\u179a\u17b9\u1798\u178f\u17d2\u179a\u17bc\u179c\u17d4')
+        setLoginStep('idle')
+        setError('អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ។')
       } else {
-        setSuccess(true)
-        setTimeout(() => router.push('/'), 1000)
+        setLoginStep('completed')
       }
     } catch {
-      setError('\u1798\u17b6\u1793\u1780\u17c6\u17a0\u17bb\u179f\u17d4 \u179f\u17bc\u1798\u1796\u17d2\u1799\u17b6\u1799\u17b6\u1798\u1798\u17d2\u178f\u1784\u1791\u17c0\u178f\u17d4')
+      setLoginStep('idle')
+      setError('មានកំហុស។ សូមព្យាយាមម្តងទៀត។')
     } finally {
       setLoading(false)
     }
@@ -50,13 +71,22 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
     setError('')
+    setLoginStep('authenticating')
     try {
+      await new Promise((r) => setTimeout(r, 400))
+      setLoginStep('retrieving')
       await signIn('google', { callbackUrl: '/', redirect: true })
     } catch {
+      setLoginStep('idle')
       setError('មានកំហុសក្នុងការចូលដោយ Google។')
       setGoogleLoading(false)
     }
   }
+
+  const progressPercent =
+    loginStep === 'authenticating' ? 33 :
+    loginStep === 'retrieving' ? 66 :
+    loginStep === 'completed' ? 100 : 0
 
   return (
     <div className="min-h-screen bg-obsidian cyber-grid-bg flex items-center justify-center px-4">
@@ -75,11 +105,65 @@ export default function LoginPage() {
         </div>
 
         <div className="card-gaming p-6">
-          <h2 className="text-lg font-semibold text-white mb-6 font-khmer text-center">{'\u1785\u17bc\u179b\u1782\u178e\u1793\u17b8'}</h2>
+          <h2 className="text-lg font-semibold text-white mb-6 font-khmer text-center">{'ចូលគណនី'}</h2>
+
+          {/* Loading Progress Bar */}
+          <AnimatePresence>
+            {loginStep !== 'idle' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-6"
+              >
+                <div className="relative h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+                  <motion.div
+                    className={`absolute inset-y-0 left-0 rounded-full ${
+                      loginStep === 'completed' ? 'bg-green-400' : 'bg-neon'
+                    }`}
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  {loginStep === 'completed' ? (
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-neon animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  )}
+                  <p className={`text-sm font-khmer ${loginStep === 'completed' ? 'text-green-400' : 'text-neon'}`}>
+                    {stepLabels[loginStep].km}
+                  </p>
+                </div>
+
+                {/* Step indicators */}
+                <div className="flex items-center justify-between mt-3 px-2">
+                  {(['authenticating', 'retrieving', 'completed'] as const).map((step, i) => (
+                    <div key={step} className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-full transition-colors ${
+                        progressPercent >= (i + 1) * 33 ? (loginStep === 'completed' ? 'bg-green-400' : 'bg-neon') : 'bg-white/20'
+                      }`} />
+                      <span className={`text-[10px] ${
+                        progressPercent >= (i + 1) * 33 ? 'text-white/60' : 'text-white/20'
+                      }`}>
+                        {stepLabels[step].en}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-white/40 font-khmer mb-1.5">{'\u17a2\u17ca\u17b8\u1798\u17c2\u179b'}</label>
+              <label className="block text-sm text-white/40 font-khmer mb-1.5">{'អ៊ីមែល'}</label>
               <input
                 type="email"
                 value={email}
@@ -88,11 +172,12 @@ export default function LoginPage() {
                            text-white placeholder-white/20 focus:outline-none focus:border-neon/50"
                 placeholder="your@email.com"
                 required
+                disabled={loginStep !== 'idle'}
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/40 font-khmer mb-1.5">{'\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb'}</label>
+              <label className="block text-sm text-white/40 font-khmer mb-1.5">{'ពាក្យសម្ងាត់'}</label>
               <input
                 type="password"
                 value={password}
@@ -101,24 +186,20 @@ export default function LoginPage() {
                            text-white placeholder-white/20 focus:outline-none focus:border-neon/50"
                 placeholder="••••••••"
                 required
+                disabled={loginStep !== 'idle'}
               />
             </div>
 
             {error && (
               <p className="text-red-400 text-sm font-khmer text-center">{error}</p>
             )}
-            {success && (
-              <p className="text-green-400 text-sm font-khmer text-center">
-                {'\u1785\u17bc\u179b\u1794\u17b6\u1793\u1787\u17c4\u1782\u1787\u17d0\u1799! \u1780\u17c6\u1796\u17bb\u1784\u1794\u1789\u17d2\u1787\u17bc\u1793...'}
-              </p>
-            )}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || loginStep !== 'idle'}
               className="w-full btn-neon disabled:opacity-50"
             >
-              {loading ? '\u1780\u17c6\u1796\u17bb\u1784\u1785\u17bc\u179b...' : '\u1785\u17bc\u179b'}
+              {loading ? 'កំពុងចូល...' : 'ចូល'}
             </button>
           </form>
 
@@ -127,14 +208,14 @@ export default function LoginPage() {
               <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-obsidian-50 text-white/30 text-xs">{'\u17ac\u1785\u17bc\u179b\u178a\u17c4\u1799'}</span>
+              <span className="px-3 bg-obsidian-50 text-white/30 text-xs">{'ឬចូលដោយ'}</span>
             </div>
           </div>
 
           <div className="space-y-3">
             <button
               onClick={handleGoogleLogin}
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || loginStep !== 'idle'}
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-white/10
                                rounded-lg hover:bg-white/5 transition-colors text-sm text-white/70 disabled:opacity-50"
             >
@@ -151,18 +232,18 @@ export default function LoginPage() {
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
               )}
-              {googleLoading ? '\u1780\u17c6\u1796\u17bb\u1784\u1785\u17bc\u179b...' : 'Google'}
+              {googleLoading ? 'កំពុងចូល...' : 'Google'}
             </button>
           </div>
 
           <p className="mt-6 text-center text-sm text-white/30 font-khmer">
-            {'\u1798\u17b7\u1793\u1791\u17b6\u1793\u17cb\u1798\u17b6\u1793\u1782\u178e\u1793\u17b8?'}{' '}
-            <Link href="/register" className="text-neon hover:underline">{'\u1785\u17bb\u17a0\u17d2\u179c\u17be\u17a0\u17d2\u1798\u17c4\u17c7'}</Link>
+            {'មិនទាន់មានគណនី?'}{' '}
+            <Link href="/register" className="text-neon hover:underline">{'ចុះឈ្មោះ'}</Link>
           </p>
         </div>
 
         <Link href="/" className="block text-center mt-4 text-sm text-white/30 hover:text-neon transition-colors font-khmer">
-          {'\u2190 \u178f\u17d2\u179a\u17a1\u1794\u17cb\u1791\u17c5\u1791\u17c6\u1796\u17d0\u179a\u178a\u17be\u1798'}
+          {'← ត្រឡប់ទៅទំព័រដើម'}
         </Link>
       </motion.div>
     </div>

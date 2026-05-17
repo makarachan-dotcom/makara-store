@@ -1,20 +1,58 @@
 'use client'
 
+import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useStore } from '@/store/useStore'
 
 export default function AccountPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { t, locale } = useTranslation()
+  const theme = useStore((s) => s.theme)
+  const setTheme = useStore((s) => s.setTheme)
+  const [faqOpen, setFaqOpen] = useState<number | null>(null)
 
   const handleLogout = async () => {
     await signOut({ redirect: false })
     router.push('/')
   }
+
+  const faqItems = [
+    {
+      q: locale === 'km' ? 'តើ MakaraStore លក់អ្វីខ្លះ?' : 'What does MakaraStore sell?',
+      a: locale === 'km'
+        ? 'MakaraStore លក់គណនីឌីជីថល ដូចជា ChatGPT Plus, Netflix Premium, Spotify Premium, Canva Pro និងផលិតផលឌីជីថលផ្សេងៗទៀត។'
+        : 'MakaraStore sells digital accounts such as ChatGPT Plus, Netflix Premium, Spotify Premium, Canva Pro and other digital products.',
+    },
+    {
+      q: locale === 'km' ? 'តើខ្ញុំបង់ប្រាក់យ៉ាងម៉េច?' : 'How do I make a payment?',
+      a: locale === 'km'
+        ? 'អ្នកអាចបង់ប្រាក់តាម ABA Bank, ACLEDA Bank ឬ Wing Bank។ សូមផ្ទុករូបភាពបង្កាន់ដៃបន្ទាប់ពីផ្ទេរប្រាក់។'
+        : 'You can pay via ABA Bank, ACLEDA Bank, or Wing Bank. Please upload your receipt image after transferring.',
+    },
+    {
+      q: locale === 'km' ? 'តើខ្ញុំអាចទទួលបានការសងប្រាក់វិញទេ?' : 'Can I get a refund?',
+      a: locale === 'km'
+        ? 'ទេ ផលិតផលឌីជីថលមិនអាចសងប្រាក់វិញបានទេ។ សូមអានគោលការណ៍ឯកជនភាពរបស់យើងសម្រាប់ព័ត៌មានបន្ថែម។'
+        : 'No, digital products are non-refundable. Please read our privacy policy for more information.',
+    },
+    {
+      q: locale === 'km' ? 'តើការបញ្ជាទិញយកពេលប៉ុន្មាន?' : 'How long does an order take?',
+      a: locale === 'km'
+        ? 'បន្ទាប់ពីការបង់ប្រាក់ត្រូវបានផ្ទៀងផ្ទាត់ គណនីរបស់អ្នកនឹងត្រូវបានផ្ញើក្នុងរយៈពេល ១-២៤ ម៉ោង។'
+        : 'After payment is verified, your account will be delivered within 1-24 hours.',
+    },
+    {
+      q: locale === 'km' ? 'តើខ្ញុំអាចទាក់ទងផ្នែកជំនួយយ៉ាងម៉េច?' : 'How can I contact support?',
+      a: locale === 'km'
+        ? 'អ្នកអាចទាក់ទងយើងតាម Telegram @AF4STURF ឬប្រើមុខងារជជែក AI នៅក្នុងគេហទំព័រ។'
+        : 'You can contact us via Telegram @AF4STURF or use the AI chat feature on the website.',
+    },
+  ]
 
   if (status === 'loading') {
     return (
@@ -35,7 +73,7 @@ export default function AccountPage() {
         >
           <div className="w-1 h-8 bg-gradient-to-b from-neon to-transparent rounded-full" />
           <h1 className="text-2xl font-display font-bold text-white">
-            {locale === 'km' ? '\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u200b\u1782\u178e\u178e\u17b8' : 'Account Settings'}
+            {locale === 'km' ? 'ការកំណត់​គណនី' : 'Account Settings'}
           </h1>
         </motion.div>
 
@@ -62,10 +100,10 @@ export default function AccountPage() {
               ) : (
                 <>
                   <h2 className="text-lg font-semibold text-white/70">
-                    {locale === 'km' ? '\u1798\u17b7\u1793\u1791\u17b6\u1793\u17cb\u1785\u17bc\u179b' : 'Not logged in'}
+                    {locale === 'km' ? 'មិនទាន់ចូល' : 'Not logged in'}
                   </h2>
                   <Link href="/login" className="text-sm text-neon hover:underline">
-                    {locale === 'km' ? '\u1785\u17bc\u179b\u200b\u1798\u1780\u200b\u1782\u178e\u178e\u17b8' : 'Login to your account'}
+                    {locale === 'km' ? 'ចូល​មក​គណនី' : 'Login to your account'}
                   </Link>
                 </>
               )}
@@ -82,7 +120,7 @@ export default function AccountPage() {
         >
           {/* Order History */}
           <Link
-            href="/cart"
+            href="/purchase-history"
             className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
           >
             <span className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
@@ -94,7 +132,7 @@ export default function AccountPage() {
             <div className="flex-1">
               <p className="text-white font-khmer">{t('orderHistory')}</p>
               <p className="text-xs text-white/40 font-khmer">
-                {locale === 'km' ? '\u1798\u17be\u179b\u200b\u1780\u17b6\u179a\u200b\u1794\u1789\u17d2\u1787\u17b6\u200b\u1791\u17b7\u1789\u200b\u179a\u1794\u179f\u17cb\u200b\u17a2\u17d2\u1793\u1780' : 'View your order history'}
+                {locale === 'km' ? 'មើល​ការ​បញ្ជា​ទិញ​របស់​អ្នក' : 'View your order history'}
               </p>
             </div>
             <svg className="w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,15 +154,108 @@ export default function AccountPage() {
             <div className="flex-1">
               <p className="text-white font-khmer">{t('favorites')}</p>
               <p className="text-xs text-white/40 font-khmer">
-                {locale === 'km' ? '\u1795\u179b\u17b7\u178f\u1795\u179b\u200b\u178a\u17c2\u179b\u200b\u17a2\u17d2\u1793\u1780\u200b\u1785\u17bc\u179b\u1785\u17b7\u178f\u17d2\u178f' : 'Products you saved'}
+                {locale === 'km' ? 'ផលិតផល​ដែល​អ្នក​ចូលចិត្ត' : 'Products you saved'}
               </p>
             </div>
             <svg className="w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
+        </motion.div>
 
-          {/* Privacy Policy */}
+        {/* Device Login Info */}
+        {session?.user && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="rounded-2xl border border-white/10 bg-obsidian-50/50 backdrop-blur-sm p-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <svg className="w-5 h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <h3 className="text-white font-semibold font-khmer">
+                {locale === 'km' ? 'ឧបករណ៍ដែលបានចូល' : 'Device Login'}
+              </h3>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-neon/10">
+                <div className="w-10 h-10 rounded-lg bg-neon/10 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-white">
+                    {locale === 'km' ? 'ឧបករណ៍បច្ចុប្បន្ន' : 'Current Device'}
+                  </p>
+                  <p className="text-xs text-white/40">
+                    {locale === 'km' ? 'កំពុងប្រើប្រាស់' : 'Currently active'}
+                  </p>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Appearance Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="rounded-2xl border border-white/10 bg-obsidian-50/50 backdrop-blur-sm p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+            <h3 className="text-white font-semibold font-khmer">{t('appearance')}</h3>
+          </div>
+          <div className="flex gap-3">
+            {([
+              { mode: 'dark' as const, label: locale === 'km' ? 'ងងឹត' : 'Dark', icon: '🌙' },
+              { mode: 'gaming' as const, label: locale === 'km' ? 'ហ្គេម' : 'Gaming', icon: '🎮' },
+            ]).map((opt) => (
+              <button
+                key={opt.mode}
+                onClick={() => setTheme({ mode: opt.mode })}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all ${
+                  theme.mode === opt.mode
+                    ? 'border-neon/40 bg-neon/10 text-neon'
+                    : 'border-white/10 bg-white/5 text-white/50 hover:text-white/70'
+                }`}
+              >
+                <span>{opt.icon}</span>
+                <span className="text-sm font-khmer">{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Privacy & Security */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-2xl border border-white/10 bg-obsidian-50/50 backdrop-blur-sm overflow-hidden divide-y divide-white/5"
+        >
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <h3 className="text-white font-semibold font-khmer">
+                {locale === 'km' ? 'ឯកជនភាព និងសុវត្ថិភាព' : 'Privacy & Security'}
+              </h3>
+            </div>
+          </div>
+
           <Link
             href="/privacy-policy"
             className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
@@ -132,13 +263,13 @@ export default function AccountPage() {
             <span className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </span>
             <div className="flex-1">
               <p className="text-white font-khmer">{t('privacyPolicy')}</p>
               <p className="text-xs text-white/40 font-khmer">
-                {locale === 'km' ? '\u17a2\u17b6\u1793\u200b\u1782\u17c4\u179b\u1780\u17b6\u179a\u178e\u17cd\u200b\u17af\u1780\u1787\u1793\u200b\u1797\u17b6\u1796\u200b\u179a\u1794\u179f\u17cb\u200b\u1799\u17be\u1784' : 'Read our privacy policy'}
+                {locale === 'km' ? 'អាន​គោលការណ៍​ឯកជនភាព​របស់​យើង' : 'Read our privacy policy'}
               </p>
             </div>
             <svg className="w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +277,6 @@ export default function AccountPage() {
             </svg>
           </Link>
 
-          {/* Instructions */}
           <Link
             href="/instructions"
             className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
@@ -160,7 +290,7 @@ export default function AccountPage() {
             <div className="flex-1">
               <p className="text-white font-khmer">{t('instructions')}</p>
               <p className="text-xs text-white/40 font-khmer">
-                {locale === 'km' ? '\u179f\u17c1\u1785\u1780\u17d2\u178f\u17b8\u200b\u178e\u17c2\u1793\u17b6\u17c6\u200b\u1780\u17b6\u179a\u200b\u1794\u17d2\u179a\u17be\u200b\u1794\u17d2\u179a\u17b6\u179f\u17cb' : 'How to use our services'}
+                {locale === 'km' ? 'សេចក្ដី​ណែនាំ​ការ​ប្រើ​ប្រាស់' : 'How to use our services'}
               </p>
             </div>
             <svg className="w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +300,7 @@ export default function AccountPage() {
 
           {/* Contact Admin */}
           <a
-            href="https://t.me/makarastore"
+            href="https://t.me/AF4STURF"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors"
@@ -183,7 +313,7 @@ export default function AccountPage() {
             </span>
             <div className="flex-1">
               <p className="text-white font-khmer">{t('contactAdmin')}</p>
-              <p className="text-xs text-white/40 font-khmer">Telegram</p>
+              <p className="text-xs text-white/40 font-khmer">Telegram @AF4STURF</p>
             </div>
             <svg className="w-5 h-5 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -191,12 +321,68 @@ export default function AccountPage() {
           </a>
         </motion.div>
 
+        {/* FAQ MakaraStore */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="rounded-2xl border border-white/10 bg-obsidian-50/50 backdrop-blur-sm overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="text-white font-semibold font-khmer">
+                FAQ MakaraStore
+              </h3>
+            </div>
+          </div>
+
+          <div className="divide-y divide-white/5">
+            {faqItems.map((item, i) => (
+              <div key={i}>
+                <button
+                  onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                  className="w-full flex items-center gap-3 px-6 py-4 hover:bg-white/5 transition-colors text-left"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm text-white font-khmer">{item.q}</p>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 text-white/30 transition-transform ${faqOpen === i ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <AnimatePresence>
+                  {faqOpen === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-6 pb-4 text-sm text-white/50 font-khmer leading-relaxed">
+                        {item.a}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Logout Button */}
         {session?.user && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.45 }}
           >
             <button
               onClick={handleLogout}
@@ -218,7 +404,7 @@ export default function AccountPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.45 }}
           >
             <Link
               href="/login"
