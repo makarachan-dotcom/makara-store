@@ -1,14 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession, SessionProvider } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 
 type LoginStep = 'idle' | 'authenticating' | 'retrieving' | 'completed'
 
+const ADMIN_EMAIL = 'chanmakara672@gmail.com'
+
 export default function LoginPage() {
+  return (
+    <SessionProvider>
+      <LoginPageContent />
+    </SessionProvider>
+  )
+}
+
+function LoginPageContent() {
+  const { data: session } = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,13 +34,24 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
+    if (session?.user?.email === ADMIN_EMAIL) {
+      window.location.href = '/admin/dashboard'
+      return
+    }
+  }, [session])
+
+  useEffect(() => {
     if (loginStep === 'completed') {
       const timer = setTimeout(() => {
-        window.location.href = '/'
+        if (email === ADMIN_EMAIL) {
+          window.location.href = '/admin/dashboard'
+        } else {
+          window.location.href = '/'
+        }
       }, 800)
       return () => clearTimeout(timer)
     }
-  }, [loginStep])
+  }, [loginStep, email])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

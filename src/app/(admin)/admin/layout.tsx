@@ -5,7 +5,7 @@ import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider, useSession, signOut } from 'next-auth/react'
 
 const adminLinks = [
   { href: '/admin/dashboard', label: 'ផ្ទាំងព័ត៌មាន', labelEn: 'Dashboard', icon: '📊' },
@@ -69,13 +69,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </button>
 
         {/* ត្រឡប់ទៅគេហទំព័រ */}
-        <div className="p-3 border-t border-neon/10">
+        <div className="p-3 border-t border-neon/10 space-y-2">
           <Link href="/" className="flex items-center gap-2 text-white/30 hover:text-neon text-sm transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             {sidebarOpen && <span className="font-khmer">ត្រឡប់ទៅគេហទំព័រ</span>}
           </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="flex items-center gap-2 text-red-400/50 hover:text-red-400 text-sm transition-colors w-full"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {sidebarOpen && <span className="font-khmer">ចាកចេញ</span>}
+          </button>
         </div>
       </aside>
 
