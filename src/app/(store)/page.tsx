@@ -1,110 +1,49 @@
 'use client'
 
-// ទំព័រដើម - Homepage
-import { useState, useMemo } from 'react'
+// ទំព័រដើម - Homepage - Real Version
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import HeroBanner from '@/components/home/HeroBanner'
 import ProductCard from '@/components/home/ProductCard'
 import PaymentBanner from '@/components/home/PaymentBanner'
 import { useTranslation } from '@/hooks/useTranslation'
 
-const sampleProducts = [
-  {
-    id: '1',
-    slug: 'chatgpt-plus-1month',
-    nameKm: 'ChatGPT Plus - ១ ខែ',
-    nameEn: 'ChatGPT Plus - 1 Month',
-    price: 9.99,
-    originalPrice: 20.00,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: true,
-  },
-  {
-    id: '2',
-    slug: 'chatgpt-plus-3months',
-    nameKm: 'ChatGPT Plus - ៣ ខែ',
-    nameEn: 'ChatGPT Plus - 3 Months',
-    price: 24.99,
-    originalPrice: 60.00,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: true,
-  },
-  {
-    id: '3',
-    slug: 'netflix-premium',
-    nameKm: 'Netflix Premium - ១ ខែ',
-    nameEn: 'Netflix Premium - 1 Month',
-    price: 5.99,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: false,
-  },
-  {
-    id: '4',
-    slug: 'spotify-premium',
-    nameKm: 'Spotify Premium - ១ ខែ',
-    nameEn: 'Spotify Premium - 1 Month',
-    price: 3.99,
-    image: '/images/logo.jpg',
-    stockStatus: 'LOW_STOCK',
-    isFeatured: false,
-  },
-  {
-    id: '5',
-    slug: 'youtube-premium',
-    nameKm: 'YouTube Premium - ១ ខែ',
-    nameEn: 'YouTube Premium - 1 Month',
-    price: 4.99,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: false,
-  },
-  {
-    id: '6',
-    slug: 'canva-pro',
-    nameKm: 'Canva Pro - ១ ខែ',
-    nameEn: 'Canva Pro - 1 Month',
-    price: 6.99,
-    originalPrice: 12.99,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: true,
-  },
-  {
-    id: '7',
-    slug: 'adobe-creative',
-    nameKm: 'Adobe Creative Cloud - ១ ខែ',
-    nameEn: 'Adobe Creative Cloud - 1 Month',
-    price: 14.99,
-    image: '/images/logo.jpg',
-    stockStatus: 'PRE_ORDER',
-    isFeatured: false,
-  },
-  {
-    id: '8',
-    slug: 'discord-nitro',
-    nameKm: 'Discord Nitro - ១ ខែ',
-    nameEn: 'Discord Nitro - 1 Month',
-    price: 4.49,
-    image: '/images/logo.jpg',
-    stockStatus: 'IN_STOCK',
-    isFeatured: false,
-  },
-]
+interface Product {
+  id: string
+  slug: string
+  nameKm: string
+  nameEn: string
+  price: number
+  originalPrice?: number | null
+  image: string | null
+  stockStatus: string
+  isFeatured: boolean
+}
 
 export default function HomePage() {
   const { t, locale } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/products')
+      const data = await res.json()
+      setProducts(data.products || [])
+    } catch { setProducts([]) }
+    finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { fetchProducts() }, [fetchProducts])
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return sampleProducts
+    if (!searchQuery.trim()) return products
     const q = searchQuery.toLowerCase()
-    return sampleProducts.filter(
+    return products.filter(
       (p) => p.nameKm.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q) || p.slug.includes(q)
     )
-  }, [searchQuery])
+  }, [searchQuery, products])
 
   const featuredProducts = useMemo(() => filteredProducts.filter((p) => p.isFeatured), [filteredProducts])
 
@@ -176,18 +115,28 @@ export default function HomePage() {
             </a>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-          >
-            {featuredProducts.map((product) => (
-              <motion.div key={product.id} variants={itemVariants}>
-                <ProductCard {...product} />
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {featuredProducts.map((product) => (
+                <motion.div key={product.id} variants={itemVariants}>
+                  <ProductCard {...product} image={product.image || '/images/logo.jpg'} originalPrice={product.originalPrice ?? undefined} />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <p className="text-white/30 text-center py-8 font-khmer">
+              {locale === 'km' ? 'មិនមានផលិតផលពិសេស' : 'No featured products yet'}
+            </p>
+          )}
         </section>
 
         {/* ផលិតផលទាំងអស់ */}
@@ -199,18 +148,28 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
-          >
-            {filteredProducts.map((product) => (
-              <motion.div key={product.id} variants={itemVariants}>
-                <ProductCard {...product} />
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+            >
+              {filteredProducts.map((product) => (
+                <motion.div key={product.id} variants={itemVariants}>
+                  <ProductCard {...product} image={product.image || '/images/logo.jpg'} originalPrice={product.originalPrice ?? undefined} />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <p className="text-white/30 text-center py-8 font-khmer">
+              {locale === 'km' ? 'មិនមានផលិតផល - សូមបន្ថែមផលិតផលពីផ្ទាំង Admin' : 'No products yet - Add products from Admin panel'}
+            </p>
+          )}
         </section>
 
         {/* ការបង់ប្រាក់ដែលទទួលយក */}
