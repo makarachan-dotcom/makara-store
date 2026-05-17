@@ -4,12 +4,12 @@ import { getServerSession } from 'next-auth'
 import { authOptions, isAdminUser } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-    return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-  }
-
   try {
+    const session = await getServerSession(authOptions)
+    if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
 
@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
     const dataUrl = `data:${file.type};base64,${base64}`
 
     return NextResponse.json({ url: dataUrl })
-  } catch {
+  } catch (error) {
+    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 }

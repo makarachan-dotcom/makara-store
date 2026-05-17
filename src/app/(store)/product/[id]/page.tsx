@@ -1,54 +1,110 @@
 'use client'
 
 // ទំព័រព័ត៌មានផលិតផល
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
+import { getProductImage } from '@/lib/product-images'
+
+interface ProductData {
+  id: string
+  slug: string
+  nameKm: string
+  nameEn: string
+  descriptionKm?: string
+  descriptionEn?: string
+  price: number
+  originalPrice?: number | null
+  image: string | null
+  images: string[]
+  stockStatus: string
+  isFeatured: boolean
+}
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const { t, locale } = useTranslation()
   const addToCart = useStore((s) => s.addToCart)
   const router = useRouter()
+  const { data: session } = useSession()
   const [quantity, setQuantity] = useState(1)
+  const [product, setProduct] = useState<ProductData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  // ទិន្នន័យគំរូ (នឹងត្រូវជំនួសដោយ API)
-  const product = {
-    id: params.id,
-    slug: params.id,
-    nameKm: 'ChatGPT Plus - ១ ខែ',
-    nameEn: 'ChatGPT Plus - 1 Month',
-    descriptionKm: 'ដំឡើង ChatGPT របស់អ្នកទៅកាន់ Plus សម្រាប់រយៈពេល ១ ខែ។ អ្នកនឹងទទួលបានលទ្ធភាពចូលប្រើ GPT-4, DALL-E 3 និងមុខងារផ្សេងៗទៀត។',
-    descriptionEn: 'Upgrade your ChatGPT to Plus for 1 month. You will get access to GPT-4, DALL-E 3, and other features.',
-    price: 9.99,
-    originalPrice: 20.00,
-    image: '/images/logo.jpg',
-    images: ['/images/logo.jpg'],
-    stockStatus: 'IN_STOCK',
-    isFeatured: true,
+  const fetchProduct = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/products/${params.id}`)
+      if (!res.ok) {
+        setError(true)
+        return
+      }
+      const data = await res.json()
+      setProduct(data.product)
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [params.id])
+
+  useEffect(() => { fetchProduct() }, [fetchProduct])
+
+  if (loading) {
+    return (
+      <div className="cyber-grid-bg min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className="cyber-grid-bg min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white/50 font-khmer mb-4">
+            {locale === 'km' ? 'រកមិនឃើញផលិតផល' : 'Product not found'}
+          </p>
+          <Link href="/" className="btn-neon text-sm">
+            {locale === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Home'}
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   const name = locale === 'km' ? product.nameKm : product.nameEn
   const description = locale === 'km' ? product.descriptionKm : product.descriptionEn
+  const productImage = getProductImage(product.nameEn || product.slug, product.image)
 
   const handleAddToCart = () => {
+    if (!session) {
+      router.push('/login')
+      return
+    }
     addToCart({
       productId: product.id,
       name,
       price: product.price,
-      image: product.image,
+      image: productImage,
       quantity,
     })
   }
 
   const handleBuyNow = () => {
+    if (!session) {
+      router.push('/login')
+      return
+    }
     addToCart({
       productId: product.id,
       name,
       price: product.price,
-      image: product.image,
+      image: productImage,
       quantity,
     })
     router.push('/checkout')
@@ -65,7 +121,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             className="relative aspect-square rounded-2xl overflow-hidden card-gaming"
           >
             <Image
-              src={product.image}
+              src={productImage}
               alt={name}
               fill
               className="object-cover"
@@ -111,11 +167,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </div>
 
             {/* ការពិពណ៌នា */}
-            <div className="border-t border-neon/10 pt-4">
-              <p className="text-white/50 font-khmer leading-relaxed text-sm">
-                {description}
-              </p>
-            </div>
+            {description && (
+              <div className="border-t border-neon/10 pt-4">
+                <p className="text-white/50 font-khmer leading-relaxed text-sm">
+                  {description}
+                </p>
+              </div>
+            )}
 
             {/* ចំនួន */}
             <div className="flex items-center gap-4">
@@ -150,6 +208,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 {t('buyNow')}
               </button>
             </div>
+
+            {/* Login prompt */}
+            {!session && (
+              <p className="text-white/40 text-xs font-khmer text-center">
+                {locale === 'km'
+                  ? 'សូមចូលគណនីមុនពេលទិញផលិតផល'
+                  : 'Please log in before purchasing products'}
+              </p>
+            )}
           </motion.div>
         </div>
       </div>

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <rect width="400" height="400" rx="24" fill="#000000"/>
+  <g transform="translate(80,80)">
+    <rect x="20" y="20" width="200" height="200" rx="40" fill="none" stroke="white" stroke-width="16"/>
+    <path d="M120 60L120 180" stroke="url(#cursor_grad)" stroke-width="20" stroke-linecap="round"/>
+    <path d="M70 120L170 120" stroke="url(#cursor_grad2)" stroke-width="20" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="cursor_grad" x1="120" y1="60" x2="120" y2="180" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#00D4FF"/>
+        <stop offset="1" stop-color="#7B61FF"/>
+      </linearGradient>
+      <linearGradient id="cursor_grad2" x1="70" y1="120" x2="170" y2="120" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#00D4FF"/>
+        <stop offset="1" stop-color="#7B61FF"/>
+      </linearGradient>
+    </defs>
+  </g>
+</svg>
