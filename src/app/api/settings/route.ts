@@ -56,9 +56,6 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updatedVal = await getSetting(Object.keys(body)[0] || 'maintenanceMode')
-    void updatedVal
-
     const allSettings = await prisma.siteSetting.findMany()
     const result: Record<string, string> = { ...DEFAULT_SETTINGS }
     for (const s of allSettings) {
