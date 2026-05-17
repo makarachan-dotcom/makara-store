@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useStore } from '@/store/useStore'
 
 const plans = [
   { id: 'plus-1m', nameKm: 'ChatGPT Plus - ១ ខែ', nameEn: 'ChatGPT Plus - 1 Month', price: 9.99, features: ['GPT-4o', 'DALL-E 3', 'Advanced Data Analysis'] },
@@ -16,6 +17,54 @@ export default function ChatGPTUpgradePage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  const addToCart = useStore((s) => s.addToCart)
+
+  const handleSubmitOrder = async () => {
+    if (!selectedPlan || !email || !password) {
+      setSubmitStatus('error')
+      setErrorMessage(
+        locale === 'km'
+          ? 'សូមបំពេញព័ត៌មានទាំងអស់។'
+          : 'Please fill in all fields.'
+      )
+      return
+    }
+
+    setSubmitting(true)
+    setSubmitStatus('idle')
+    setErrorMessage('')
+
+    try {
+      const plan = plans.find((p) => p.id === selectedPlan)
+      if (!plan) return
+
+      addToCart({
+        productId: plan.id,
+        name: locale === 'km' ? plan.nameKm : plan.nameEn,
+        price: plan.price,
+        image: '/images/logo.jpg',
+        quantity: 1,
+        metadata: { email, upgradeType: plan.id },
+      })
+
+      setSubmitStatus('success')
+      setEmail('')
+      setPassword('')
+      setSelectedPlan(null)
+    } catch {
+      setSubmitStatus('error')
+      setErrorMessage(
+        locale === 'km'
+          ? 'មានកំហុសក្នុងការបញ្ជូន។ សូមព្យាយាមម្តងទៀត។'
+          : 'An error occurred. Please try again.'
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="cyber-grid-bg min-h-screen">
@@ -66,6 +115,21 @@ export default function ChatGPTUpgradePage() {
           ))}
         </div>
 
+        {/* សារជោគជ័យ */}
+        {submitStatus === 'success' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto mb-6 p-4 rounded-xl border border-green-500/30 bg-green-500/10 text-center"
+          >
+            <p className="text-green-400 font-khmer text-sm">
+              {locale === 'km'
+                ? 'ការបញ្ជាទិញត្រូវបានបន្ថែមទៅកន្ត្រក។ សូមបន្តទៅការបង់ប្រាក់។'
+                : 'Order added to cart. Please proceed to checkout.'}
+            </p>
+          </motion.div>
+        )}
+
         {/* ទម្រង់ព័ត៌មានគណនី */}
         {selectedPlan && (
           <motion.div
@@ -104,7 +168,19 @@ export default function ChatGPTUpgradePage() {
                 />
               </div>
 
-              <button className="w-full btn-gold mt-2">{t('submitOrder')}</button>
+              {submitStatus === 'error' && errorMessage && (
+                <p className="text-red-400 text-sm font-khmer">{errorMessage}</p>
+              )}
+
+              <button
+                onClick={handleSubmitOrder}
+                disabled={submitting}
+                className="w-full btn-gold mt-2 disabled:opacity-50"
+              >
+                {submitting
+                  ? (locale === 'km' ? 'កំពុងបញ្ជូន...' : 'Submitting...')
+                  : t('submitOrder')}
+              </button>
             </div>
           </motion.div>
         )}

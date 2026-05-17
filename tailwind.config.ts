@@ -54,7 +54,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        khmer: ['Kantumruy Pro', 'Koh Santepheap', 'sans-serif'],
+        khmer: ['var(--font-kantumruy)', 'Kantumruy Pro', 'sans-serif'],
         display: ['Orbitron', 'sans-serif'],
       },
       animation: {

@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* នាំចូល Khmer Font */
-@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+/* Orbitron font for display headings */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -113,4 +113,22 @@
   .gradient-text-gold {
     @apply bg-gradient-to-r from-gold to-gold-300 bg-clip-text text-transparent;
   }
+}
+
+/* Scrolling Payment Banner Animation */
+@keyframes paymentScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.payment-scroll {
+  animation: paymentScroll 15s linear infinite;
+}
+
+.payment-scroll:hover {
+  animation-play-state: paused;
 }
