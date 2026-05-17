@@ -3,12 +3,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions, isAdminUser } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 30
+
 export async function POST(request: NextRequest) {
+  let session = null
   try {
-    const session = await getServerSession(authOptions)
-    if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
+    session = await getServerSession(authOptions)
+  } catch (authError) {
+    console.error('Upload auth error:', authError)
+    return NextResponse.json({ error: 'Authentication error. Please log out and log in again.' }, { status: 401 })
+  }
+
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+    return NextResponse.json({ error: 'Admin access required. Please log in as admin.' }, { status: 403 })
+  }
+
+  try {
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null

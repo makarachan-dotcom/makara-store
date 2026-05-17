@@ -81,9 +81,9 @@ export default function AdminSettingsPage() {
     formData.append('file', file)
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ error: `Upload failed (HTTP ${res.status})` }))
       if (!res.ok) {
-        setUploadBankError(data.error || 'Upload failed')
+        setUploadBankError(data.error || `Upload failed (HTTP ${res.status})`)
         return
       }
       if (data.url) {

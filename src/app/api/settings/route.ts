@@ -4,6 +4,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 30
+
 const DEFAULT_SETTINGS: Record<string, string> = {
   maintenanceMode: 'false',
   telegramUrl: 'https://t.me/AF4STURF',
@@ -40,12 +43,19 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  let session = null
   try {
-    const session = await getServerSession(authOptions)
-    if (!isAdminUser(session?.user as { email?: string; role?: string })) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
+    session = await getServerSession(authOptions)
+  } catch (authError) {
+    console.error('getServerSession failed:', authError)
+    return NextResponse.json({ error: 'Authentication error. Please log out and log in again.' }, { status: 401 })
+  }
 
+  if (!isAdminUser(session?.user as { email?: string; role?: string })) {
+    return NextResponse.json({ error: 'Admin access required. Please log in as admin.' }, { status: 403 })
+  }
+
+  try {
     const body = await request.json()
 
     for (const [key, value] of Object.entries(body)) {
@@ -64,7 +74,7 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error updating settings:', error)
     return NextResponse.json(
-      { error: 'កំហុសក្នុងការកែប្រែការកំណត់។ Error updating settings.' },
+      { error: `Error saving settings: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }
