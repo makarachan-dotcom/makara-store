@@ -1,0 +1,160 @@
+// Rich product descriptions matching vipplus.pro style
+// Generates bilingual (Khmer/English) descriptions for AI products
+
+interface ProductDescriptionData {
+  descEn: string
+  descKm: string
+  features: string[]
+  featuresKm: string[]
+  upgradeMethod: string
+  upgradeMethodKm: string
+  deliveryTime: string
+  deliveryTimeKm: string
+  priceNote?: string
+  priceNoteKm?: string
+}
+
+const PRODUCT_DESCRIPTIONS: Record<string, ProductDescriptionData> = {
+  chatgpt: {
+    descEn: 'Upgrade your ChatGPT account to Plus or Pro. We use 100% official iOS in-app purchase method with Apple gift cards. Auto-upgrade your account instantly. Supports new and existing accounts. Safe, secure, and guaranteed activation.',
+    descKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1782\u178E\u1793\u17B8 ChatGPT \u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u1791\u17C5 Plus \u17AC Pro\u17D4 \u1799\u17BE\u1784\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u179C\u17B7\u1792\u17B8\u1791\u17B7\u1789\u1780\u17D2\u1793\u17BB\u1784\u1780\u1798\u17D2\u1798\u179C\u17B7\u1792\u17B8 iOS \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A 100% \u1787\u17B6\u1798\u17BD\u1799\u1780\u17B6\u178F\u17A2\u17C6\u178E\u17C4\u1799 Apple\u17D4 \u178A\u17C6\u17A1\u17BE\u1784\u1782\u178E\u1793\u17B8\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u1797\u17D2\u179B\u17B6\u1798\u17D7\u17D4 \u179F\u17BB\u179C\u178F\u17D2\u1790\u17B7\u1797\u17B6\u1796 \u1793\u17B7\u1784\u1792\u17B6\u1793\u17B6\u1794\u17BE\u1780\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u17D4',
+    features: [
+      'GPT-4o with vision and voice capabilities',
+      'DALL-E 3 image generation',
+      'Advanced Data Analysis & Code Interpreter',
+      'Web Browsing in real-time',
+      'Custom GPTs and GPT Store access',
+      'Priority access during peak times',
+    ],
+    featuresKm: [
+      'GPT-4o \u1787\u17B6\u1798\u17BD\u1799\u179F\u1798\u178F\u17D2\u1790\u1797\u17B6\u1796\u1798\u17BE\u179B \u1793\u17B7\u1784\u179F\u1798\u17D2\u179B\u17C1\u1784',
+      'DALL-E 3 \u1794\u1784\u17D2\u1780\u17BE\u178F\u179A\u17BC\u1794\u1797\u17B6\u1796',
+      '\u179C\u17B7\u1797\u17B6\u1782\u1791\u17B7\u1793\u17D2\u1793\u1793\u17D0\u1799\u1780\u1798\u17D2\u179A\u17B7\u178F\u1781\u17D2\u1796\u179F\u17CB \u1793\u17B7\u1784\u1794\u1780\u179F\u17D2\u179A\u17B6\u1799\u1780\u17BC\u178A',
+      '\u179A\u17BB\u1780\u179A\u1780\u17A2\u17CA\u17B8\u1793\u1792\u17BA\u178E\u17C2\u178F\u1797\u17D2\u179B\u17B6\u1798\u17D7',
+      'Custom GPTs \u1793\u17B7\u1784 GPT Store',
+      '\u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u1785\u17BC\u179B\u1794\u17D2\u179A\u17BE\u1793\u17C5\u1796\u17C1\u179B\u1798\u17B6\u1793\u1798\u1793\u17BB\u179F\u17D2\u179F\u1785\u17D2\u179A\u17BE\u1793',
+    ],
+    upgradeMethod: '100% Official iOS In-App Purchase via Apple Gift Card',
+    upgradeMethodKm: '\u1791\u17B7\u1789\u1780\u17D2\u1793\u17BB\u1784\u1780\u1798\u17D2\u1798\u179C\u17B7\u1792\u17B8 iOS \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A 100% \u178F\u17B6\u1798\u179A\u1799\u17C8\u1780\u17B6\u178F\u17A2\u17C6\u178E\u17C4\u1799 Apple',
+    deliveryTime: 'Instant ~ 1 minute auto delivery',
+    deliveryTimeKm: '\u1797\u17D2\u179B\u17B6\u1798\u17D7 ~ \u17E1 \u1793\u17B6\u1791\u17B8 \u178A\u17B9\u1780\u1787\u1789\u17D2\u1787\u17BC\u1793\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7',
+    priceNote: 'Price shown is per month. Multi-month plans available at discount.',
+    priceNoteKm: '\u178F\u1798\u17D2\u179B\u17C3\u1794\u1784\u17D2\u17A0\u17B6\u1789\u1787\u17B6\u1780\u17D2\u1793\u17BB\u1784\u1798\u17BD\u1799\u1781\u17C2\u17D4 \u1782\u1798\u17D2\u179A\u17C4\u1784\u1785\u17D2\u179A\u17BE\u1793\u1781\u17C2\u1798\u17B6\u1793\u178F\u1798\u17D2\u179B\u17C3\u1794\u1789\u17D2\u1785\u17BB\u17C7\u17D4',
+  },
+  claude: {
+    descEn: 'Upgrade to Claude Pro or Team. Direct charge to your Anthropic account. 100% official method. Claude Pro gives you 5x more usage, priority access, and early access to new features. Team plan offers 25% more quota than individual.',
+    descKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1791\u17C5 Claude Pro \u17AC Team\u17D4 \u1794\u1789\u17D2\u1785\u17BC\u179B\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1791\u17C5\u1782\u178E\u1793\u17B8 Anthropic \u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u17D4 \u179C\u17B7\u1792\u17B8\u179F\u17B6\u179F\u17D2\u178F\u17D2\u179A\u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A 100%\u17D4 Claude Pro \u17B1\u17D2\u1799\u17A2\u17D2\u1793\u1780\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1785\u17D2\u179A\u17BE\u1793\u1787\u17B6\u1784 5 \u178A\u1784 \u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u1785\u17BC\u179B\u1794\u17D2\u179A\u17BE \u1793\u17B7\u1784\u1798\u17BB\u1781\u1784\u17B6\u179A\u1790\u17D2\u1798\u17B8\u17D4',
+    features: [
+      'Claude 3.5 Sonnet - most intelligent model',
+      '5x more usage than free tier',
+      'Priority access during high traffic',
+      'Projects for organized conversations',
+      'Early access to new features',
+      'Extended context window',
+    ],
+    featuresKm: [
+      'Claude 3.5 Sonnet - \u1798\u17C9\u17BC\u178A\u17C2\u179B\u1786\u17D2\u179B\u17B6\u178F\u1794\u17C6\u1795\u17BB\u178F',
+      '\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1785\u17D2\u179A\u17BE\u1793\u1787\u17B6\u1784 5 \u178A\u1784\u1796\u17B8\u1780\u1798\u17D2\u179A\u17B7\u178F\u17A5\u178F\u1794\u17D2\u179A\u17B6\u1780\u17CB',
+      '\u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u1785\u17BC\u179B\u1794\u17D2\u179A\u17BE\u1793\u17C5\u1796\u17C1\u179B\u1798\u17B6\u1793\u1798\u1793\u17BB\u179F\u17D2\u179F\u1785\u17D2\u179A\u17BE\u1793',
+      'Projects \u179F\u1798\u17D2\u179A\u17B6\u1794\u17CB\u1780\u17B6\u179A\u179F\u1793\u17D2\u1790\u1793\u17B6\u1798\u17B6\u1793\u179A\u1794\u17C0\u1794\u179A\u17C0\u1794',
+      '\u1798\u17BB\u1781\u1784\u17B6\u179A\u1790\u17D2\u1798\u17B8\u1798\u17BB\u1793\u1796\u17C1\u179B',
+      '\u1794\u1784\u17D2\u17A2\u17BC\u1785\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u179C\u17C2\u1784\u1787\u17B6\u1784',
+    ],
+    upgradeMethod: '100% Official Direct Charge to Your Account',
+    upgradeMethodKm: '\u1794\u1789\u17D2\u1785\u17BC\u179B\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1791\u17C5\u1782\u178E\u1793\u17B8\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780 \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A 100%',
+    deliveryTime: '1~5 minutes auto delivery',
+    deliveryTimeKm: '\u17E1~\u17E5 \u1793\u17B6\u1791\u17B8 \u178A\u17B9\u1780\u1787\u1789\u17D2\u1787\u17BC\u1793\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7',
+  },
+  gemini: {
+    descEn: 'Upgrade to Google Gemini Advanced (Google One AI Premium). Includes Gemini Pro 1.5 model, 2TB Google One storage, and all Google One benefits. Self-service charge directly to your account. Pixel guaranteed.',
+    descKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1791\u17C5 Google Gemini Advanced (Google One AI Premium)\u17D4 \u179A\u17BD\u1798\u1794\u1789\u17D2\u1785\u17BC\u179B\u1798\u17C9\u17BC\u178A\u17C2\u179B Gemini Pro 1.5, \u1791\u17C6\u17A0\u17C6 Google One 2TB \u1793\u17B7\u1784\u17A2\u178F\u17D2\u1790\u1794\u17D2\u179A\u1799\u17C4\u1787\u1793\u17CD Google One \u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB\u17D4 \u1794\u1789\u17D2\u1785\u17BC\u179B\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1791\u17C5\u1782\u178E\u1793\u17B8\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u17D4',
+    features: [
+      'Gemini Pro 1.5 - Google\'s most capable model',
+      '2TB Google One cloud storage',
+      'Google One AI Premium benefits',
+      'Priority access to new features',
+      'Works with Gmail, Docs, and more',
+      'Available in 150+ countries',
+    ],
+    featuresKm: [
+      'Gemini Pro 1.5 - \u1798\u17C9\u17BC\u178A\u17C2\u179B\u179B\u17D2\u17A2\u1794\u17C6\u1795\u17BB\u178F\u179A\u1794\u179F\u17CB Google',
+      '\u1791\u17C6\u17A0\u17C6\u1796\u1796\u17D2\u1780 Google One 2TB',
+      '\u17A2\u178F\u17D2\u1790\u1794\u17D2\u179A\u1799\u17C4\u1787\u1793\u17CD Google One AI Premium',
+      '\u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u1785\u17BC\u179B\u1794\u17D2\u179A\u17BE\u1798\u17BB\u1781\u1784\u17B6\u179A\u1790\u17D2\u1798\u17B8',
+      '\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u1787\u17B6\u1798\u17BD\u1799 Gmail, Docs \u1793\u17B7\u1784\u1785\u17D2\u179A\u17BE\u1793\u1791\u17C0\u178F',
+      '\u1798\u17B6\u1793\u1793\u17C5\u1780\u17D2\u1793\u17BB\u1784\u1787\u17B6\u1784 150+ \u1794\u17D2\u179A\u1791\u17C1\u179F',
+    ],
+    upgradeMethod: 'Self-Service Direct Charge via Google Play',
+    upgradeMethodKm: '\u1794\u1789\u17D2\u1785\u17BC\u179B\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u178F\u17B6\u1798\u179A\u1799\u17C8 Google Play',
+    deliveryTime: 'Instant auto activation',
+    deliveryTimeKm: '\u1794\u17BE\u1780\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u1797\u17D2\u179B\u17B6\u1798\u17D7',
+  },
+  grok: {
+    descEn: 'Upgrade to SuperGrok (Grok Premium) by xAI. Get unlimited Grok 2 access, image generation with Aurora, DeepSearch, and priority processing. Direct account upgrade, fast and secure.',
+    descKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1791\u17C5 SuperGrok (Grok Premium) \u178A\u17C4\u1799 xAI\u17D4 \u1791\u1791\u17BD\u179B Grok 2 \u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1782\u17D2\u1798\u17B6\u1793\u1780\u17C6\u178E\u178F\u17CB \u1794\u1784\u17D2\u1780\u17BE\u178F\u179A\u17BC\u1794\u1797\u17B6\u1796\u1787\u17B6\u1798\u17BD\u1799 Aurora, DeepSearch \u1793\u17B7\u1784\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u17D4',
+    features: [
+      'Unlimited Grok 2 access',
+      'Aurora image generation',
+      'DeepSearch capabilities',
+      'Priority processing speed',
+      'Real-time X/Twitter integration',
+      'Advanced reasoning mode',
+    ],
+    featuresKm: [
+      'Grok 2 \u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1782\u17D2\u1798\u17B6\u1793\u1780\u17C6\u178E\u178F\u17CB',
+      'Aurora \u1794\u1784\u17D2\u1780\u17BE\u178F\u179A\u17BC\u1794\u1797\u17B6\u1796',
+      'DeepSearch \u179F\u1798\u178F\u17D2\u1790\u1797\u17B6\u1796\u179F\u17D2\u179C\u17C2\u1784\u179A\u1780\u179F\u17D2\u17CA\u17B8\u1787\u1798\u17D2\u179A\u17C5',
+      '\u179B\u17D2\u1794\u17BE\u1789\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796',
+      '\u179A\u17BD\u1798\u1794\u1789\u17D2\u1785\u17BC\u179B X/Twitter \u1797\u17D2\u179B\u17B6\u1798\u17D7',
+      '\u179A\u1794\u17C0\u1794\u1780\u17B6\u179A\u1795\u17D2\u178F\u17BB\u1780\u17A2\u17B6\u179A\u1798\u17D2\u1798\u178E\u17CD\u1780\u1798\u17D2\u179A\u17B7\u178F\u1781\u17D2\u1796\u179F\u17CB',
+    ],
+    upgradeMethod: 'Direct Account Upgrade',
+    upgradeMethodKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1782\u178E\u1793\u17B8\u1795\u17D2\u1791\u17B6\u179B\u17CB',
+    deliveryTime: '5~30 minutes manual delivery',
+    deliveryTimeKm: '\u17E5~\u17E3\u17E0 \u1793\u17B6\u1791\u17B8 \u178A\u17B9\u1780\u1787\u1789\u17D2\u1787\u17BC\u1793\u178A\u17C4\u1799\u1795\u17D2\u1791\u17B6\u179B\u17CB',
+  },
+  cursor: {
+    descEn: 'Upgrade to Cursor Pro or Ultra. The AI-first code editor with powerful completions, chat, and multi-file editing. Boost your coding productivity with the best AI coding assistant available.',
+    descKm: '\u178A\u17C6\u17A1\u17BE\u1784\u1791\u17C5 Cursor Pro \u17AC Ultra\u17D4 \u1780\u1798\u17D2\u1798\u179C\u17B7\u1792\u17B8\u1780\u17C2\u1780\u17BC\u178A AI \u178A\u17C2\u179B\u1798\u17B6\u1793\u179F\u1798\u178F\u17D2\u1790\u1797\u17B6\u1796\u1794\u17C6\u1796\u17C1\u1789\u1794\u17D2\u179A\u1780\u17B6\u179A \u1787\u1787\u17C2\u1780 \u1793\u17B7\u1784\u1780\u17C2\u179F\u1798\u17D2\u179A\u17BD\u179B\u17AF\u1780\u179F\u17B6\u179A\u1785\u17D2\u179A\u17BE\u1793\u17D4 \u1794\u1784\u17D2\u1780\u17BE\u1793\u1795\u179B\u17B7\u178F\u1797\u17B6\u1796\u1780\u17B6\u179A\u179F\u179A\u179F\u17C1\u179A\u1780\u17BC\u178A\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u17D4',
+    features: [
+      'Unlimited AI completions',
+      'Multi-file AI editing',
+      'AI Chat with codebase context',
+      'Supports GPT-4, Claude, and more',
+      'Terminal command generation',
+      'Fast, premium request priority',
+    ],
+    featuresKm: [
+      'AI \u1794\u17C6\u1796\u17C1\u1789\u1794\u17D2\u179A\u1780\u17B6\u179A\u1782\u17D2\u1798\u17B6\u1793\u1780\u17C6\u178E\u178F\u17CB',
+      '\u1780\u17C2\u179F\u1798\u17D2\u179A\u17BD\u179B\u17AF\u1780\u179F\u17B6\u179A\u1785\u17D2\u179A\u17BE\u1793\u178A\u17C4\u1799 AI',
+      'AI Chat \u1787\u17B6\u1798\u17BD\u1799\u1794\u179A\u17B7\u1794\u1791\u1780\u17BC\u178A\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780',
+      '\u1782\u17B6\u17C6\u1791\u17D2\u179A GPT-4, Claude \u1793\u17B7\u1784\u1785\u17D2\u179A\u17BE\u1793\u1791\u17C0\u178F',
+      '\u1794\u1784\u17D2\u1780\u17BE\u178F\u1796\u17B6\u1780\u17D2\u1799\u1794\u1789\u17D2\u1787\u17B6 Terminal',
+      '\u179B\u17D2\u1794\u17BE\u1789\u179A\u17A0\u17D0\u179F \u17A2\u17B6\u1791\u17B7\u1797\u17B6\u1796\u179F\u17C6\u178E\u17BE\u179A premium',
+    ],
+    upgradeMethod: 'Account Seat Assignment',
+    upgradeMethodKm: '\u1780\u17C6\u178E\u178F\u17CB\u1780\u17C5\u1782\u178E\u1793\u17B8',
+    deliveryTime: '1~24 hours manual delivery',
+    deliveryTimeKm: '\u17E1~\u17E2\u17E4 \u1798\u17C9\u17C4\u1784 \u178A\u17B9\u1780\u1787\u1789\u17D2\u1787\u17BC\u1793\u178A\u17C4\u1799\u1795\u17D2\u1791\u17B6\u179B\u17CB',
+  },
+}
+
+export function getProductDescription(nameOrSlug: string): ProductDescriptionData | null {
+  const lower = nameOrSlug.toLowerCase()
+  if (lower.includes('chatgpt') || lower.includes('gpt') || lower.includes('openai')) {
+    return PRODUCT_DESCRIPTIONS.chatgpt
+  }
+  if (lower.includes('claude') || lower.includes('anthropic')) {
+    return PRODUCT_DESCRIPTIONS.claude
+  }
+  if (lower.includes('gemini') || lower.includes('google ai') || lower.includes('bard')) {
+    return PRODUCT_DESCRIPTIONS.gemini
+  }
+  if (lower.includes('grok') || lower.includes('xai')) {
+    return PRODUCT_DESCRIPTIONS.grok
+  }
+  if (lower.includes('cursor')) {
+    return PRODUCT_DESCRIPTIONS.cursor
+  }
+  return null
+}
