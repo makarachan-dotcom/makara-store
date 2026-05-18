@@ -11,6 +11,8 @@ const adminLinks = [
   { href: '/admin/dashboard', label: 'ផ្ទាំងព័ត៌មាន', labelEn: 'Dashboard', icon: '📊' },
   { href: '/admin/products', label: 'គ្រប់គ្រងផលិតផល', labelEn: 'Products', icon: '📦' },
   { href: '/admin/orders', label: 'គ្រប់គ្រងការបញ្ជាទិញ', labelEn: 'Orders', icon: '🛒' },
+  { href: '/admin/bakong-queue', label: 'Bakong ផ្ទៀងផ្ទាត់', labelEn: 'Bakong Queue', icon: '🇰🇭' },
+  { href: '/admin/card-keys', label: 'គ្រប់គ្រង Card Keys', labelEn: 'Card Keys', icon: '🎫' },
   { href: '/admin/receipts', label: 'គ្រប់គ្រងបង្កាន់ដៃ', labelEn: 'Receipts', icon: '🧾' },
   { href: '/admin/announcements', label: 'ការជូនដំណឹង', labelEn: 'Announcements', icon: '📢' },
   { href: '/admin/settings', label: 'ការកំណត់', labelEn: 'Settings', icon: '⚙️' },

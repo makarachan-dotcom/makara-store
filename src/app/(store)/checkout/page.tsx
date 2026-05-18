@@ -1,6 +1,5 @@
 'use client'
 
-// ទំព័របង់ប្រាក់ - Checkout
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -10,40 +9,19 @@ import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
 
-type Bank = 'ABA_BANK' | 'ACLEDA_BANK' | 'WING_BANK'
-
-const banks: { id: Bank; name: string; icon: string; settingsKey: string }[] = [
-  { id: 'ABA_BANK', name: 'ABA Bank', icon: '/images/banks/aba.png', settingsKey: 'khqrABA' },
-  { id: 'ACLEDA_BANK', name: 'ACLEDA Bank', icon: '/images/banks/acleda.jpg', settingsKey: 'khqrACLEDA' },
-  { id: 'WING_BANK', name: 'Wing Bank', icon: '/images/banks/wing.webp', settingsKey: 'khqrWING' },
-]
-
 export default function CheckoutPage() {
   const { t, locale } = useTranslation()
-  const { cart, getCartTotal, clearCart } = useStore()
+  const { cart, getCartTotal } = useStore()
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [selectedBank, setSelectedBank] = useState<Bank | null>(null)
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState<string | null>(null)
+  const [selectedMethod, setSelectedMethod] = useState<'bakong' | 'stripe' | null>(null)
   const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-  const [orderCreated, setOrderCreated] = useState(false)
-  const [settings, setSettings] = useState<Record<string, string>>({})
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
-    }
+    if (status === 'unauthenticated') router.push('/login')
   }, [status, router])
-
-  useEffect(() => {
-    fetch('/api/settings')
-      .then(res => res.json())
-      .then(data => setSettings(data.settings || {}))
-      .catch(() => {})
-  }, [])
 
   useEffect(() => {
     const dismissed = localStorage.getItem('makara-privacy-agreed')
@@ -56,63 +34,45 @@ export default function CheckoutPage() {
     setShowPrivacyModal(false)
   }
 
-  const handleReceiptUpload = async () => {
-    if (!receiptFile || !selectedBank) return
-
-    setUploading(true)
-    setUploadStatus(null)
-
-    const formData = new FormData()
-    formData.append('receipt', receiptFile)
-    formData.append('bank', selectedBank)
-    formData.append('amount', getCartTotal().toString())
-
+  const handleContinue = async () => {
+    if (!selectedMethod || cart.length === 0) return
+    setCreating(true)
     try {
-      const res = await fetch('/api/receipt-verify', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          bank: selectedMethod === 'bakong' ? 'BAKONG_KHQR' : 'STRIPE',
+          totalAmount: getCartTotal(),
+        }),
       })
       const data = await res.json()
-
-      if (data.status === 'AI_APPROVED' || data.success) {
-        setUploadStatus('success')
-        if (session?.user) {
-          try {
-            await fetch('/api/orders', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                items: cart.map((item) => ({
-                  productId: item.productId,
-                  name: item.name,
-                  quantity: item.quantity,
-                  price: item.price,
-                })),
-                bank: selectedBank,
-                totalAmount: getCartTotal(),
-              }),
-            })
-            setOrderCreated(true)
-            clearCart()
-          } catch {
-            // Order creation failed silently - receipt was already uploaded
-          }
-        }
-      } else if (data.status === 'AI_REJECTED') {
-        if (data.reason?.includes('blurry') || data.reason?.includes('\u1798\u17b7\u1793\u1785\u17d2\u1794\u17b6\u179f\u17cb')) {
-          setUploadStatus('blurry')
-        } else {
-          setUploadStatus('invalid')
-        }
-      } else {
-        setUploadStatus(data.error || 'error')
+      if (data.order?.id) {
+        router.push(selectedMethod === 'bakong'
+          ? `/checkout/bakong?orderId=${data.order.id}`
+          : `/checkout/stripe?orderId=${data.order.id}`)
       }
     } catch {
-      setUploadStatus('error')
+      // Error
     } finally {
-      setUploading(false)
+      setCreating(false)
     }
   }
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+  if (!session) return null
 
   return (
     <div className="cyber-grid-bg min-h-screen">
@@ -122,71 +82,25 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-display font-bold text-white">{t('checkout')}</h1>
         </div>
 
-        {/* Order Created Success */}
-        {orderCreated && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-gaming p-6 mb-6 text-center"
-          >
-            <div className="w-16 h-16 mx-auto bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-white mb-2 font-khmer">
-              {locale === 'km' ? 'ការបញ្ជាទិញបានជោគជ័យ!' : 'Order Placed Successfully!'}
-            </h2>
-            <p className="text-white/50 text-sm font-khmer mb-4">
-              {locale === 'km' ? 'យើងនឹងផ្ទៀងផ្ទាត់ការបង់ប្រាក់របស់អ្នកឆាប់ៗ។' : 'We will verify your payment shortly.'}
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Link href="/purchase-history" className="btn-neon text-sm">
-                {locale === 'km' ? 'មើលប្រវត្តិទិញ' : 'View Orders'}
-              </Link>
-              <Link href="/" className="btn-gold text-sm">
-                {locale === 'km' ? 'បន្តទិញទំនិញ' : 'Continue Shopping'}
-              </Link>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Privacy Policy Agreement */}
-        {!privacyAgreed && !orderCreated && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-gaming p-4 mb-6 border border-yellow-500/20"
-          >
+        {!privacyAgreed && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-gaming p-4 mb-6 border border-yellow-500/20">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div className="flex-1">
                 <p className="text-white/70 text-sm font-khmer mb-3">
-                  {locale === 'km'
-                    ? 'សូមអានគោលការណ៍ឯកជនភាពមុនពេលបន្ត។ សេវាកម្មរបស់យើងមិនអនុញ្ញាតឱ្យបង្វិលប្រាក់វិញទេ បើអ្នកប្ដូរចិត្ត។'
-                    : 'Please read our privacy policy before proceeding. Our services do not allow refunds if you change your mind.'}
+                  {locale === 'km' ? '\u179f\u17bc\u1798\u17a2\u17b6\u1793\u1782\u17c4\u179b\u1780\u17b6\u179a\u178e\u17cd\u17af\u1780\u1787\u1793\u1797\u17b6\u1796\u1798\u17bb\u1793\u1796\u17c1\u179b\u1794\u1793\u17d2\u178f\u17d4' : 'Please read our privacy policy before proceeding.'}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setShowPrivacyModal(true)}
-                    className="text-xs text-neon hover:underline"
-                  >
-                    {locale === 'km' ? 'អានគោលការណ៍ →' : 'Read Policy →'}
+                  <button onClick={() => setShowPrivacyModal(true)} className="text-xs text-neon hover:underline">
+                    {locale === 'km' ? '\u17a2\u17b6\u1793\u1782\u17c4\u179b\u1780\u17b6\u179a\u178e\u17cd \u2192' : 'Read Policy \u2192'}
                   </button>
-                  <button
-                    onClick={() => setPrivacyAgreed(true)}
-                    className="btn-neon text-xs px-3 py-1"
-                  >
-                    {locale === 'km' ? 'ខ្ញុំយល់ព្រម' : 'I Agree'}
+                  <button onClick={() => setPrivacyAgreed(true)} className="btn-neon text-xs px-3 py-1">
+                    {locale === 'km' ? '\u1781\u17d2\u1789\u17bb\u17c6\u1799\u179b\u17cb\u1796\u17d2\u179a\u1798' : 'I Agree'}
                   </button>
-                  <button
-                    onClick={handleDontShowAgain}
-                    className="text-xs text-white/40 hover:text-white/60"
-                  >
-                    {locale === 'km' ? 'កុំបង្ហាញម្ដងទៀត' : "Don't show again"}
+                  <button onClick={handleDontShowAgain} className="text-xs text-white/40 hover:text-white/60">
+                    {locale === 'km' ? "\u1780\u17bb\u17c6\u1794\u1784\u17d2\u17a0\u17b6\u1789\u1798\u17d2\u178f\u1784\u178f\u17c0\u178f" : "Don't show again"}
                   </button>
                 </div>
               </div>
@@ -194,172 +108,82 @@ export default function CheckoutPage() {
           </motion.div>
         )}
 
-        {/* Privacy Policy Modal */}
         <AnimatePresence>
           {showPrivacyModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-              onClick={() => setShowPrivacyModal(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="card-gaming p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-lg font-bold text-neon mb-4 font-khmer">{t('privacyPolicy')}</h3>
-                <div className="text-sm text-white/60 space-y-3 font-khmer">
-                  <p>{locale === 'km' ? 'គោលការណ៍មិនបង្វិលប្រាក់វិញ៖ សេវាកម្មរបស់យើងមិនអនុញ្ញាតឱ្យបង្វិលប្រាក់វិញទេ បន្ទាប់ពីការទិញត្រូវបានបញ្ជាក់។ បើអ្នកប្ដូរចិត្ត យើងមិនអាចបង្វិលប្រាក់វិញបានទេ។' : 'No Refund Policy: Our services do not allow refunds after a purchase is confirmed. If you change your mind, we cannot issue a refund.'}</p>
-                  <p>{locale === 'km' ? 'ផលិតផលឌីជីថលទាំងអស់ត្រូវបានផ្ដល់ជូនភ្លាមៗបន្ទាប់ពីការផ្ទៀងផ្ទាត់ការបង់ប្រាក់។' : 'All digital products are delivered immediately after payment verification.'}</p>
-                  <p>{locale === 'km' ? 'ព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកត្រូវបានការពារ និងមិនត្រូវបានចែករំលែកជាមួយភាគីទីបី។' : 'Your personal information is protected and not shared with third parties.'}</p>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => { setPrivacyAgreed(true); setShowPrivacyModal(false) }}
-                    className="flex-1 btn-gold text-sm"
-                  >
-                    {locale === 'km' ? 'ខ្ញុំយល់ព្រម' : 'I Agree'}
-                  </button>
-                  <button
-                    onClick={handleDontShowAgain}
-                    className="flex-1 btn-neon text-sm"
-                  >
-                    {locale === 'km' ? 'កុំបង្ហាញម្ដងទៀត' : "Don't show again"}
-                  </button>
-                </div>
+              onClick={() => setShowPrivacyModal(false)}>
+              <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+                className="card-gaming p-6 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+                <h3 className="text-lg font-bold text-neon mb-4">{t('privacyPolicy')}</h3>
+                <p className="text-sm text-white/60 mb-4">No Refund Policy: Our services do not allow refunds after a purchase is confirmed.</p>
+                <button onClick={() => { setPrivacyAgreed(true); setShowPrivacyModal(false) }} className="btn-gold text-sm w-full">I Agree</button>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* សង្ខេបការបញ្ជាទិញ */}
-        <div className="card-gaming p-4 mb-6">
-          <h3 className="text-sm text-neon font-semibold mb-3 font-khmer">
-            {locale === 'km' ? 'សង្ខេបការបញ្ជាទិញ' : 'Order Summary'}
-          </h3>
-          {cart.map((item) => (
-            <div key={item.productId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded overflow-hidden relative">
-                  <Image src={item.image} alt={item.name} fill className="object-cover" sizes="40px" />
+        {cart.length === 0 && (
+          <div className="card-gaming p-8 text-center">
+            <p className="text-white/40 font-khmer mb-4">{locale === 'km' ? '\u1780\u1793\u17d2\u178f\u17d2\u179a\u1780\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u178f\u178f\u17c1' : 'Your cart is empty'}</p>
+            <Link href="/" className="btn-neon text-sm">{locale === 'km' ? '\u1794\u1793\u17d2\u178f\u178f\u17b7\u1789\u178f\u17c6\u1793\u17b7\u1789' : 'Continue Shopping'}</Link>
+          </div>
+        )}
+
+        {cart.length > 0 && (
+          <>
+            <div className="card-gaming p-4 mb-6">
+              <h3 className="text-sm text-neon font-semibold mb-3 font-khmer">{locale === 'km' ? '\u179f\u1784\u17d2\u1781\u17c1\u1794\u1780\u17b6\u179a\u1794\u1789\u17d2\u1787\u17b6\u178f\u17b7\u1789' : 'Order Summary'}</h3>
+              {cart.map((item) => (
+                <div key={item.productId} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded overflow-hidden relative">
+                      <Image src={item.image} alt={item.name} fill className="object-cover" sizes="40px" />
+                    </div>
+                    <span className="text-sm text-white/60 font-khmer">{item.name} x{item.quantity}</span>
+                  </div>
+                  <span className="text-gold font-bold text-sm">${(item.price * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className="text-sm text-white/60 font-khmer">{item.name} x{item.quantity}</span>
+              ))}
+              <div className="flex items-center justify-between pt-3 mt-2 border-t border-neon/10">
+                <span className="font-semibold text-white font-khmer">{t('orderTotal')}</span>
+                <span className="text-xl font-bold text-gold">${getCartTotal().toFixed(2)}</span>
               </div>
-              <span className="text-gold font-bold text-sm">${(item.price * item.quantity).toFixed(2)}</span>
             </div>
-          ))}
-          <div className="flex items-center justify-between pt-3 mt-2 border-t border-neon/10">
-            <span className="font-semibold text-white font-khmer">{t('orderTotal')}</span>
-            <span className="text-xl font-bold text-gold text-glow-gold">${getCartTotal().toFixed(2)}</span>
-          </div>
-        </div>
 
-        {/* ជ្រើសរើសធនាគារ */}
-        <div className="mb-6">
-          <h3 className="text-sm text-neon font-semibold mb-3 font-khmer">{t('paymentMethod')}</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {banks.map((bank) => (
-              <button
-                key={bank.id}
-                onClick={() => setSelectedBank(bank.id)}
-                className={`p-4 rounded-xl border-2 transition-all text-center ${
-                  selectedBank === bank.id
-                    ? 'border-neon bg-neon/5 shadow-[0_0_15px_rgba(0,242,254,0.2)]'
-                    : 'border-white/10 hover:border-white/20'
-                }`}
-              >
-                <div className="w-12 h-12 mx-auto rounded-lg overflow-hidden mb-2 relative">
-                  <Image src={bank.icon} alt={bank.name} fill className="object-contain" sizes="48px" />
-                </div>
-                <span className="text-xs text-white/60">{bank.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+            <div className="mb-6">
+              <h3 className="text-sm text-neon font-semibold mb-3 font-khmer">{t('paymentMethod')}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onClick={() => setSelectedMethod('bakong')}
+                  className={`p-5 rounded-xl border-2 transition-all text-left ${selectedMethod === 'bakong' ? 'border-neon bg-neon/5' : 'border-white/10 hover:border-white/20'}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center text-xl">\ud83c\uddf0\ud83c\udded</div>
+                    <div>
+                      <p className="text-white font-bold text-sm">BAKONG KHQR</p>
+                      <p className="text-white/40 text-xs font-khmer">{locale === 'km' ? '\u1794\u1784\u17cb\u178f\u17b6\u1798\u1780\u1798\u17d2\u1798\u179c\u17b7\u1792\u17b8\u1792\u1793\u17b6\u1782\u17b6\u179a\u1780\u1798\u17d2\u1796\u17bb\u1787\u17b6' : 'Pay with Cambodia bank apps'}</p>
+                    </div>
+                  </div>
+                  <ul className="space-y-1 text-xs text-white/50"><li>\u2022 ABA, ACLEDA, Wing, TrueMoney...</li><li>\u2022 Upload receipt \u2192 Admin verifies</li></ul>
+                </button>
+                <button onClick={() => setSelectedMethod('stripe')}
+                  className={`p-5 rounded-xl border-2 transition-all text-left ${selectedMethod === 'stripe' ? 'border-neon bg-neon/5' : 'border-white/10 hover:border-white/20'}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center text-xl">\ud83d\udcb3</div>
+                    <div>
+                      <p className="text-white font-bold text-sm">STRIPE</p>
+                      <p className="text-white/40 text-xs font-khmer">{locale === 'km' ? '\u1794\u1784\u17cb\u178f\u17b6\u1798\u1780\u17b6\u178f\u17a2\u1793\u17d2\u178f\u179a\u1787\u17b6\u178f\u17b7' : 'Pay with international card'}</p>
+                    </div>
+                  </div>
+                  <ul className="space-y-1 text-xs text-white/50"><li>\u2022 Visa / Mastercard / UnionPay</li><li>\u2022 Instant auto-delivery</li></ul>
+                </button>
+              </div>
+            </div>
 
-        {/* KHQR Code */}
-        {selectedBank && (() => {
-          const bankInfo = banks.find(b => b.id === selectedBank)
-          const khqrImage = bankInfo ? settings[bankInfo.settingsKey] : null
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="card-gaming p-6 mb-6 text-center"
-            >
-              <p className="text-neon text-sm mb-4 font-khmer">
-                {locale === 'km' ? '\u179f\u17d2\u1780\u17c2\u1793 KHQR \u1781\u17b6\u1784\u1780\u17d2\u179a\u17c4\u1798\u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb' : 'Scan KHQR below to pay'}
-              </p>
-              {khqrImage ? (
-                <div className="w-64 mx-auto bg-white rounded-xl overflow-hidden mb-4">
-                  <img src={khqrImage} alt="KHQR Code" className="w-full h-auto" />
-                </div>
-              ) : (
-                <div className="w-48 h-48 mx-auto bg-white rounded-xl flex items-center justify-center mb-4">
-                  <p className="text-obsidian text-xs font-semibold">
-                    {locale === 'km' ? '\u1798\u17b7\u1793\u1791\u17b6\u1793\u17cb\u1798\u17b6\u1793 KHQR \u1793\u17c5\u17a1\u17be\u1799\u1791\u17c1' : 'KHQR not available yet'}
-                  </p>
-                </div>
-              )}
-              <p className="text-gold font-bold text-lg">${getCartTotal().toFixed(2)}</p>
-            </motion.div>
-          )
-        })()}
-
-        {/* ផ្ទុកបង្កាន់ដៃ */}
-        {selectedBank && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-gaming p-6"
-          >
-            <h3 className="text-sm text-neon font-semibold mb-4 font-khmer">{t('uploadReceipt')}</h3>
-
-            <label className="block w-full border-2 border-dashed border-neon/20 rounded-xl p-8 text-center
-                              cursor-pointer hover:border-neon/40 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-              />
-              <svg className="w-10 h-10 mx-auto text-neon/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p className="text-sm text-white/40 font-khmer">
-                {receiptFile
-                  ? receiptFile.name
-                  : locale === 'km'
-                    ? 'ចុចដើម្បីជ្រើសរើសរូបភាពបង្កាន់ដៃ'
-                    : 'Click to select receipt image'}
-              </p>
-            </label>
-
-            {uploadStatus === 'success' && (
-              <p className="mt-3 text-green-400 text-sm font-khmer">{t('receiptUploaded')}</p>
-            )}
-            {uploadStatus === 'blurry' && (
-              <p className="mt-3 text-red-400 text-sm font-khmer">{t('receiptBlurry')}</p>
-            )}
-            {uploadStatus === 'invalid' && (
-              <p className="mt-3 text-red-400 text-sm font-khmer">{t('receiptInvalid')}</p>
-            )}
-
-            <button
-              onClick={handleReceiptUpload}
-              disabled={!receiptFile || uploading}
-              className="mt-4 w-full btn-gold disabled:opacity-50"
-            >
-              {uploading
-                ? (locale === 'km' ? 'កំពុងផ្ទុក...' : 'Uploading...')
-                : t('submitOrder')}
+            <button onClick={handleContinue} disabled={!selectedMethod || !privacyAgreed || creating}
+              className="w-full btn-gold py-3 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+              {creating ? 'Creating order...' : selectedMethod === 'bakong' ? 'Continue to KHQR \u2192' : selectedMethod === 'stripe' ? 'Continue to Card Payment \u2192' : 'Select a payment method'}
             </button>
-          </motion.div>
+          </>
         )}
       </div>
     </div>

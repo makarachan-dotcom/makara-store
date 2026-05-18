@@ -113,6 +113,7 @@ model Product {
   stockQuantity   Int         @default(0)
   isFeatured      Boolean     @default(false)
   isActive        Boolean     @default(true)
+  deliveryType    DeliveryType @default(MANUAL)
   sourceUrl       String?
   sourceId        String?     @unique
   metadata        Json?
@@ -123,6 +124,7 @@ model Product {
   category        Category    @relation(fields: [categoryId], references: [id])
   orderItems      OrderItem[]
   favorites       Favorite[]
+  cardKeys        CardKey[]
 
   @@map("products")
 }
@@ -146,6 +148,10 @@ model Order {
   paymentMethod   PaymentMethod?
   paymentProof    String?
   receiptStatus   ReceiptStatus @default(PENDING)
+  stripePaymentIntentId String?
+  bakongMd5       String?
+  deliveryStatus  DeliveryStatus @default(PENDING_DELIVERY)
+  deliveredKeys   String[]
   adminNote       String?
   adjustedAmount  Float?
   createdAt       DateTime      @default(now())
@@ -153,6 +159,7 @@ model Order {
 
   user            User          @relation(fields: [userId], references: [id])
   items           OrderItem[]
+  bakongReceipts  BakongReceipt[]
 
   @@map("orders")
 }
@@ -185,6 +192,21 @@ enum PaymentMethod {
   ABA_BANK
   ACLEDA_BANK
   WING_BANK
+  BAKONG_KHQR
+  STRIPE
+}
+
+enum DeliveryType {
+  AUTO
+  MANUAL
+  PRE_ORDER
+}
+
+enum DeliveryStatus {
+  PENDING_DELIVERY
+  DELIVERING
+  DELIVERED
+  FAILED_DELIVERY
 }
 
 enum ReceiptStatus {
@@ -208,6 +230,75 @@ model Favorite {
 
   @@unique([userId, productId])
   @@map("favorites")
+}
+
+// ===== Card Keys (Auto-Delivery) =====
+
+model CardKey {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String    @db.ObjectId
+  keyCode     String
+  isSold      Boolean   @default(false)
+  orderId     String?   @db.ObjectId
+  createdAt   DateTime  @default(now())
+  soldAt      DateTime?
+
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@map("card_keys")
+}
+
+// ===== Bakong Receipts =====
+
+model BakongReceipt {
+  id                    String        @id @default(auto()) @map("_id") @db.ObjectId
+  orderId               String        @db.ObjectId
+  receiptImageUrl       String
+  ocrText               String?
+  aiRiskScore           Int           @default(50)
+  aiVerificationDetails Json?
+  adminStatus           AdminReviewStatus @default(PENDING_REVIEW)
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  createdAt             DateTime      @default(now())
+
+  order                 Order         @relation(fields: [orderId], references: [id])
+
+  @@map("bakong_receipts")
+}
+
+enum AdminReviewStatus {
+  PENDING_REVIEW
+  CONFIRMED
+  REJECTED
+}
+
+// ===== Top-Up Tasks =====
+
+model TopupTask {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  cardKey         String
+  serviceType     ServiceType
+  accountEmail    String?
+  taskStatus      TaskStatus  @default(QUEUED)
+  resultMessage   String?
+  createdAt       DateTime    @default(now())
+  completedAt     DateTime?
+
+  @@map("topup_tasks")
+}
+
+enum ServiceType {
+  CHATGPT
+  CLAUDE
+  GEMINI
+}
+
+enum TaskStatus {
+  QUEUED
+  PROCESSING
+  SUCCESS
+  FAILED
 }
 
 // ===== ផ្នែក KHQR =====
