@@ -165,8 +165,13 @@ export default function CheckoutPage() {
                   </div>
                   <ul className="space-y-1 text-xs text-white/50"><li>\u2022 ABA, ACLEDA, Wing, TrueMoney...</li><li>\u2022 Upload receipt \u2192 Admin verifies</li></ul>
                 </button>
-                <button onClick={() => setSelectedMethod('stripe')}
-                  className={`p-5 rounded-xl border-2 transition-all text-left ${selectedMethod === 'stripe' ? 'border-neon bg-neon/5' : 'border-white/10 hover:border-white/20'}`}>
+                <div
+                  className="p-5 rounded-xl border-2 border-white/5 bg-white/[0.02] text-left relative opacity-50 cursor-not-allowed">
+                  <div className="absolute top-2 right-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                      {locale === 'km' ? 'មកឆាប់' : 'Available Soon'}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center text-xl">\ud83d\udcb3</div>
                     <div>
@@ -175,13 +180,13 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <ul className="space-y-1 text-xs text-white/50"><li>\u2022 Visa / Mastercard / UnionPay</li><li>\u2022 Instant auto-delivery</li></ul>
-                </button>
+                </div>
               </div>
             </div>
 
             <button onClick={handleContinue} disabled={!selectedMethod || !privacyAgreed || creating}
               className="w-full btn-gold py-3 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed">
-              {creating ? 'Creating order...' : selectedMethod === 'bakong' ? 'Continue to KHQR \u2192' : selectedMethod === 'stripe' ? 'Continue to Card Payment \u2192' : 'Select a payment method'}
+              {creating ? (locale === 'km' ? 'កំពុងបង្កើត...' : 'Creating order...') : selectedMethod === 'bakong' ? (locale === 'km' ? 'បន្តាប់ទៅ KHQR \u2192' : 'Continue to KHQR \u2192') : (locale === 'km' ? 'ជ្រើសរើសវិធីបង់ប្រាក់' : 'Select a payment method')}
             </button>
           </>
         )}
