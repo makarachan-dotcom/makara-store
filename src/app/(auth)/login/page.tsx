@@ -96,7 +96,7 @@ function LoginPageContent() {
     try {
       await new Promise((r) => setTimeout(r, 400))
       setLoginStep('retrieving')
-      await signIn('google', { callbackUrl: '/', redirect: true })
+      await signIn('google', { callbackUrl: '/api/auth/post-login', redirect: true })
     } catch {
       setLoginStep('idle')
       setError('មានកំហុសក្នុងការចូលដោយ Google។')
