@@ -120,25 +120,18 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="card-gaming p-6">
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 mb-6">
+          {/* Progress bar */}
+          <div className="flex items-center justify-center gap-1 mb-6">
             {(['email', 'verify', 'reset'] as const).map((s, i) => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  step === s || (['verify', 'reset', 'success'].indexOf(step) > i - 1 && i < ['verify', 'reset', 'success'].indexOf(step) + 1)
-                    ? 'bg-neon text-obsidian'
-                    : 'bg-white/10 text-white/30'
-                }`}>
-                  {i + 1}
-                </div>
-                {i < 2 && <div className={`w-8 h-0.5 ${
-                  ['verify', 'reset', 'success'].indexOf(step) > i ? 'bg-neon' : 'bg-white/10'
-                }`} />}
-              </div>
+              <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                step === s || (['verify', 'reset', 'success'].indexOf(step) > i - 1 && i < ['verify', 'reset', 'success'].indexOf(step) + 1)
+                  ? 'bg-neon'
+                  : 'bg-white/10'
+              }`} />
             ))}
           </div>
 
-          {/* Step 1: Enter email */}
+          {/* Enter email */}
           {step === 'email' && (
             <form onSubmit={handleSendCode} className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-2 font-khmer text-center">
@@ -166,7 +159,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
 
-          {/* Step 2: Verify code */}
+          {/* Verify code */}
           {step === 'verify' && (
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-2 font-khmer text-center">
@@ -202,7 +195,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
 
-          {/* Step 3: Reset password */}
+          {/* Reset password */}
           {step === 'reset' && (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <h2 className="text-lg font-semibold text-white mb-2 font-khmer text-center">
@@ -241,7 +234,7 @@ export default function ForgotPasswordPage() {
             </form>
           )}
 
-          {/* Step 4: Success */}
+          {/* Success */}
           {step === 'success' && (
             <div className="text-center space-y-4">
               <div className="w-16 h-16 mx-auto bg-green-500/10 rounded-full flex items-center justify-center">

@@ -12,9 +12,13 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({ where: { email } })
 
-    // Always return success to prevent email enumeration
-    if (!user || !user.password) {
-      return NextResponse.json({ success: true })
+    // Check if user exists and has a password (registered via credentials)
+    if (!user) {
+      return NextResponse.json({ error: 'អ៊ីមែលនេះមិនទាន់បានចុះឈ្មោះនៅក្នុងប្រព័ន្ធទេ។' }, { status: 404 })
+    }
+
+    if (!user.password) {
+      return NextResponse.json({ error: 'គណនីនេះចូលប្រើតាម Google។ សូមចូលដោយប្រើ Google។' }, { status: 400 })
     }
 
     // Generate a 6-digit verification code
