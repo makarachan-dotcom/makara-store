@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         receiptImageUrl,
         ocrText,
         aiRiskScore: analysis.riskScore,
-        aiVerificationDetails: analysis as unknown as Record<string, unknown>,
+        aiVerificationDetails: JSON.parse(JSON.stringify(analysis)),
         adminStatus: analysis.riskScore <= 20 ? 'CONFIRMED' : 'PENDING_REVIEW',
       },
     })

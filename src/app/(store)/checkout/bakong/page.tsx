@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
@@ -11,6 +11,18 @@ import { useStore } from '@/store/useStore'
 type PaymentStatus = 'generating' | 'waiting' | 'uploading' | 'uploaded' | 'verified' | 'error'
 
 export default function BakongCheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <BakongCheckoutContent />
+    </Suspense>
+  )
+}
+
+function BakongCheckoutContent() {
   const { locale } = useTranslation()
   const { clearCart } = useStore()
   const { data: session } = useSession()

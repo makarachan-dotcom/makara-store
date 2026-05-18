@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { loadStripe, Stripe } from '@stripe/stripe-js'
@@ -158,6 +158,18 @@ function StripeCardForm({ orderId, amount }: { orderId: string; amount: number }
 }
 
 export default function StripeCheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <StripeCheckoutContent />
+    </Suspense>
+  )
+}
+
+function StripeCheckoutContent() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const router = useRouter()

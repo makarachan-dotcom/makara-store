@@ -38,13 +38,12 @@ export async function POST(request: NextRequest) {
         currency,
         description || `Order ${order.orderNumber}`
       )
-      const khqr = new BakongKHQR()
-      const result = khqr.generateMerchant(merchantInfo)
+      const result = BakongKHQR.generateMerchant(merchantInfo)
       qrData = {
         qrString: result.data?.qr || '',
         md5: result.data?.md5 || '',
       }
-      void khqrData // referenced to avoid unused import warning
+      void khqrData
     } catch {
       // Fallback: generate a placeholder QR string if package not available
       const md5 = Array.from(
