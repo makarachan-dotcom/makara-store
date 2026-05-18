@@ -31,8 +31,23 @@ function AdminVerifyContent() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   useEffect(() => {
-    inputRefs.current[0]?.focus()
-  }, [])
+    const checkExistingVerification = async () => {
+      try {
+        const res = await fetch('/api/admin/verify-status')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.verified) {
+            window.location.href = callbackUrl
+            return
+          }
+        }
+      } catch {
+        // Verification check failed, show PIN form
+      }
+      inputRefs.current[0]?.focus()
+    }
+    checkExistingVerification()
+  }, [callbackUrl])
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return

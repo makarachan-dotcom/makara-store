@@ -7,6 +7,7 @@ interface Variant {
   labelKm: string
   price: number
   inStock: boolean
+  stockCount?: number
 }
 
 interface SelectSpecificationsProps {
@@ -14,6 +15,7 @@ interface SelectSpecificationsProps {
   selectedVariant: number
   onSelect: (index: number) => void
   locale: string
+  totalSold?: number
 }
 
 export default function SelectSpecifications({
@@ -21,28 +23,36 @@ export default function SelectSpecifications({
   selectedVariant,
   onSelect,
   locale,
+  totalSold,
 }: SelectSpecificationsProps) {
+  const currentVariant = variants[selectedVariant]
+  const availableCount = variants.filter(v => v.inStock).length
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-sm">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 pt-5 pb-3">
-        <div className="w-8 h-8 rounded-lg bg-neon/10 flex items-center justify-center">
-          <svg className="w-4 h-4 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold text-white">
-            {locale === 'km' ? 'ជ្រើសរើសលក្ខណៈ' : 'Select Specifications'}
-          </h3>
-          <p className="text-[11px] text-white/30">
-            {locale === 'km' ? `${variants.length} ជម្រើសមាន` : `${variants.length} option${variants.length > 1 ? 's' : ''} available`}
-          </p>
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-neon/10 flex items-center justify-center">
+            <svg className="w-4 h-4 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">
+              {locale === 'km' ? 'ជ្រើសរើសលក្ខណៈ' : 'Select Specifications'}
+            </h3>
+            <p className="text-[11px] text-white/30">
+              {locale === 'km'
+                ? `${availableCount}/${variants.length} ជម្រើសមាន`
+                : `${availableCount}/${variants.length} available`}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Variants */}
-      <div className="px-4 pb-4 space-y-2">
+      <div className="px-4 pb-3 space-y-2">
         {variants.map((variant, index) => {
           const isSelected = selectedVariant === index
           return (
@@ -77,12 +87,17 @@ export default function SelectSpecifications({
                 }`}>
                   {locale === 'km' ? variant.labelKm : variant.label}
                 </p>
-                {!variant.inStock && (
+                {!variant.inStock ? (
                   <p className="text-[11px] text-red-400/80 mt-0.5 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-400/60" />
                     {locale === 'km' ? 'អស់ស្តុក' : 'Out of stock'}
                   </p>
-                )}
+                ) : variant.stockCount !== undefined && variant.stockCount <= 10 ? (
+                  <p className="text-[11px] text-yellow-400/80 mt-0.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/60" />
+                    {locale === 'km' ? `នៅសល់ ${variant.stockCount}` : `${variant.stockCount} left`}
+                  </p>
+                ) : null}
               </div>
 
               <div className="flex items-center gap-3 flex-shrink-0">
@@ -113,6 +128,28 @@ export default function SelectSpecifications({
             </motion.button>
           )
         })}
+      </div>
+
+      {/* Stock & Sales Summary */}
+      <div className="px-5 pb-4 pt-1 flex items-center gap-4 border-t border-white/[0.04]">
+        <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span>
+            {locale === 'km' ? 'ស្តុក' : 'Stock'}: {currentVariant?.stockCount ?? (currentVariant?.inStock ? '99+' : '0')}
+          </span>
+        </div>
+        {totalSold !== undefined && (
+          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            <span>
+              {locale === 'km' ? 'បានលក់' : 'Sold'}: {totalSold > 99 ? '99+' : totalSold}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

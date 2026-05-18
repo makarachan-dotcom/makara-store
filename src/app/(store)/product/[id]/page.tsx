@@ -215,19 +215,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               selectedVariant={selectedVariant}
               onSelect={(index) => { setSelectedVariant(index); setQuantity(1) }}
               locale={locale}
+              totalSold={99}
             />
-
-            {/* Stock & Sales Info */}
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                <span className="text-white/50">{locale === 'km' ? '\u179f\u17d2\u178f\u17bb\u1780' : 'Stock'}: {product.stockQuantity > 0 ? product.stockQuantity : '\u2014'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-                <span className="text-white/50">{locale === 'km' ? '\u1794\u17b6\u1793\u179b\u1780\u17cb' : 'Sold'}: 99+</span>
-              </div>
-            </div>
 
             {/* Quantity & Total */}
             <div className="card-gaming p-4 sm:p-5">

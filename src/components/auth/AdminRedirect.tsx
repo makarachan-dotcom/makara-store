@@ -17,12 +17,10 @@ export default function AdminRedirect() {
     if (pathname?.startsWith('/admin')) return
     if (redirected.current) return
 
-    // Only auto-redirect from landing pages (post-OAuth or post-login)
-    // This allows admin to browse store pages without forced redirect
     if (pathname !== '/' && pathname !== '/login') return
 
     redirected.current = true
-    window.location.href = '/admin/dashboard'
+    window.location.href = '/admin/verify?callbackUrl=/admin/dashboard'
   }, [session, status, pathname])
 
   return null

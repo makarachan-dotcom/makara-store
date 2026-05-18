@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { signIn, useSession, SessionProvider } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
@@ -33,18 +33,24 @@ function LoginPageContent() {
     completed: { km: 'រួចរាល់! កំពុងបញ្ជូន...', en: 'Completed! Redirecting...' },
   }
 
+  const redirectingRef = useRef(false)
+
   useEffect(() => {
+    if (redirectingRef.current) return
     if (session?.user?.email === ADMIN_EMAIL) {
-      window.location.href = '/admin/dashboard'
+      redirectingRef.current = true
+      window.location.href = '/admin/verify?callbackUrl=/admin/dashboard'
       return
     }
   }, [session])
 
   useEffect(() => {
     if (loginStep === 'completed') {
+      if (redirectingRef.current) return
+      redirectingRef.current = true
       const timer = setTimeout(() => {
         if (email === ADMIN_EMAIL) {
-          window.location.href = '/admin/dashboard'
+          window.location.href = '/admin/verify?callbackUrl=/admin/dashboard'
         } else {
           window.location.href = '/'
         }

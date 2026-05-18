@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const baseUrl = request.nextUrl.origin
 
   if (session?.user?.email === ADMIN_EMAIL) {
-    return NextResponse.redirect(new URL('/admin/dashboard', baseUrl))
+    return NextResponse.redirect(new URL('/admin/verify?callbackUrl=/admin/dashboard', baseUrl))
   }
 
   return NextResponse.redirect(new URL('/', baseUrl))
