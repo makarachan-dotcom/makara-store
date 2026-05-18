@@ -118,13 +118,49 @@ function BakongCheckoutContent() {
     return () => clearInterval(interval)
   }, [status, checkPayment])
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImageClientSide = (file: File, maxWidth = 1200, quality = 0.75): Promise<File> => {
+    return new Promise((resolve) => {
+      if (file.size <= 500 * 1024) {
+        resolve(file)
+        return
+      }
+      const img = new window.Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        let { width, height } = img
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { resolve(file); return }
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) { resolve(file); return }
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file) }
+      img.src = url
+    })
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setReceiptFile(file)
+    const compressed = await compressImageClientSide(file)
+    setReceiptFile(compressed)
     const reader = new FileReader()
     reader.onload = (ev) => setReceiptPreview(ev.target?.result as string)
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(compressed)
   }
 
   const handleUploadReceipt = async () => {

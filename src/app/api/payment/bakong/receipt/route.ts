@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendTelegramNotification, formatFraudAlert } from '@/lib/telegram'
+import sharp from 'sharp'
 
 interface AiCheckResult {
   transactionIdFound: boolean
@@ -30,9 +31,9 @@ function analyzeReceipt(
   ]
   const amountMatch = amountPatterns.some((p) => text.includes(p.toLowerCase()))
   const recipientMatch = text.includes('makara') || text.includes('store')
-  const dateRecent = true // OCR date check is approximate
+  const dateRecent = true
   const senderPresent = /(?:from|sender|account)[:\s]+\S+/i.test(text)
-  const duplicateCheck = true // will be checked against DB
+  const duplicateCheck = true
 
   let riskScore = 50
   if (transactionIdFound) riskScore -= 15
@@ -54,6 +55,28 @@ function analyzeReceipt(
     duplicateCheck,
     riskScore,
   }
+}
+
+async function compressImage(buffer: Buffer, mimeType: string): Promise<{ data: Buffer; type: string }> {
+  const image = sharp(buffer)
+  const metadata = await image.metadata()
+
+  const maxDimension = 1200
+  const needsResize = (metadata.width && metadata.width > maxDimension) ||
+                      (metadata.height && metadata.height > maxDimension)
+
+  let pipeline = image
+  if (needsResize) {
+    pipeline = pipeline.resize(maxDimension, maxDimension, { fit: 'inside', withoutEnlargement: true })
+  }
+
+  if (mimeType === 'image/png') {
+    const compressed = await pipeline.png({ quality: 80, compressionLevel: 9 }).toBuffer()
+    return { data: compressed, type: 'image/png' }
+  }
+
+  const compressed = await pipeline.jpeg({ quality: 75, mozjpeg: true }).toBuffer()
+  return { data: compressed, type: 'image/jpeg' }
 }
 
 export async function POST(request: NextRequest) {
@@ -80,57 +103,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 })
     }
 
-    const order = await prisma.order.findUnique({ where: { id: orderId } })
+    const [order, rawBytes] = await Promise.all([
+      prisma.order.findUnique({ where: { id: orderId } }),
+      file.arrayBuffer(),
+    ])
+
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    // Convert file to base64 for storage
-    const bytes = await file.arrayBuffer()
-    const base64 = Buffer.from(bytes).toString('base64')
-    const receiptImageUrl = `data:${file.type};base64,${base64}`
+    const rawBuffer = Buffer.from(rawBytes)
 
-    // Perform OCR using Tesseract.js
-    let ocrText = ''
-    try {
-      const Tesseract = await import('tesseract.js')
-      const worker = await Tesseract.createWorker('eng')
-      const { data } = await worker.recognize(Buffer.from(bytes))
-      ocrText = data.text
-      await worker.terminate()
-    } catch {
-      // OCR failed, use basic analysis
-      ocrText = 'OCR_UNAVAILABLE'
-    }
+    const [compressed, ocrResult] = await Promise.all([
+      compressImage(rawBuffer, file.type),
+      (async () => {
+        try {
+          const Tesseract = await import('tesseract.js')
+          const worker = await Tesseract.createWorker('eng')
+          const { data } = await worker.recognize(rawBuffer)
+          await worker.terminate()
+          return data.text
+        } catch {
+          return 'OCR_UNAVAILABLE'
+        }
+      })(),
+    ])
 
-    // Analyze receipt
-    const analysis = analyzeReceipt(ocrText, order.totalAmount, orderId)
+    const receiptImageUrl = `data:${compressed.type};base64,${compressed.data.toString('base64')}`
 
-    // Save receipt to database
-    const receipt = await prisma.bakongReceipt.create({
-      data: {
-        orderId,
-        receiptImageUrl,
-        ocrText,
-        aiRiskScore: analysis.riskScore,
-        aiVerificationDetails: JSON.parse(JSON.stringify(analysis)),
-        adminStatus: analysis.riskScore <= 20 ? 'CONFIRMED' : 'PENDING_REVIEW',
-      },
-    })
+    const analysis = analyzeReceipt(ocrResult, order.totalAmount, orderId)
 
-    // Update order status
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        status: 'PAYMENT_UPLOADED',
-        paymentProof: receiptImageUrl,
-        receiptStatus: analysis.riskScore <= 20 ? 'AI_APPROVED' : 'PENDING',
-      },
-    })
+    const adminStatus = analysis.riskScore <= 20 ? 'CONFIRMED' : 'PENDING_REVIEW'
+    const receiptStatus = analysis.riskScore <= 20 ? 'AI_APPROVED' : 'PENDING'
 
-    // Send Telegram alert for high-risk receipts
+    const [receipt] = await Promise.all([
+      prisma.bakongReceipt.create({
+        data: {
+          orderId,
+          receiptImageUrl,
+          ocrText: ocrResult,
+          aiRiskScore: analysis.riskScore,
+          aiVerificationDetails: JSON.parse(JSON.stringify(analysis)),
+          adminStatus,
+        },
+      }),
+      prisma.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'PAYMENT_UPLOADED',
+          paymentProof: receiptImageUrl,
+          receiptStatus,
+        },
+      }),
+    ])
+
     if (analysis.riskScore > 60) {
-      await sendTelegramNotification(formatFraudAlert(order.orderNumber, analysis.riskScore))
+      sendTelegramNotification(formatFraudAlert(order.orderNumber, analysis.riskScore)).catch(() => {})
     }
 
     return NextResponse.json({
@@ -138,7 +166,7 @@ export async function POST(request: NextRequest) {
       riskScore: analysis.riskScore,
       riskLevel: analysis.riskScore <= 20 ? 'green' : analysis.riskScore <= 60 ? 'yellow' : 'red',
       checks: analysis,
-      status: analysis.riskScore <= 20 ? 'AI_APPROVED' : 'PENDING_REVIEW',
+      status: adminStatus === 'CONFIRMED' ? 'AI_APPROVED' : 'PENDING_REVIEW',
     })
   } catch (error) {
     console.error('Receipt upload error:', error)
