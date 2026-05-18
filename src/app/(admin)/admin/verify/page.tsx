@@ -34,6 +34,10 @@ function AdminVerifyContent() {
     const checkExistingVerification = async () => {
       try {
         const res = await fetch('/api/admin/verify-status')
+        if (res.status === 401) {
+          window.location.href = '/login'
+          return
+        }
         if (res.ok) {
           const data = await res.json()
           if (data.verified) {
