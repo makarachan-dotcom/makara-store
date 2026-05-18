@@ -209,6 +209,11 @@ function LoginPageContent() {
                 required
                 disabled={loginStep !== 'idle'}
               />
+              <div className="text-right mt-1.5">
+                <Link href="/login/forgot-password" className="text-xs text-neon/70 hover:text-neon transition-colors font-khmer">
+                  {'ភ្លេចពាក្យសម្ងាត់?'}
+                </Link>
+              </div>
             </div>
 
             {error && (

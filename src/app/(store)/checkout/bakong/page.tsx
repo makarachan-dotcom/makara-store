@@ -40,6 +40,8 @@ function BakongCheckoutContent() {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   const [riskResult, setRiskResult] = useState<{ riskScore: number; riskLevel: string; status: string } | null>(null)
   const [error, setError] = useState('')
+  const [receiptRejected, setReceiptRejected] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
 
   // Generate KHQR on mount
   useEffect(() => {
@@ -140,6 +142,14 @@ function BakongCheckoutContent() {
         if (data.status === 'AI_APPROVED') {
           clearCart()
         }
+        if (data.riskLevel === 'red' || data.status === 'PENDING_REVIEW') {
+          setReceiptRejected(true)
+          setRejectionReason(
+            locale === 'km'
+              ? 'ប្រព័ន្ធមិនអាចកំណត់អត្តសញ្ញាណបង្កាន់ដៃបានទេ។ ប៊ូតុងពិនិត្យការបង់ប្រាក់ត្រូវបានបិទ។ សូមផ្ញើវិក័យប័ត្រទៅកាន់ Admin តាម Telegram ជំនួស។'
+              : 'System could not verify the receipt. Payment verification button is disabled. Please send the invoice to Admin via Telegram instead.'
+          )
+        }
       } else {
         setError(data.error || 'Upload failed')
         setStatus('error')
@@ -182,13 +192,18 @@ function BakongCheckoutContent() {
                 <div className="bg-white p-4 rounded-xl inline-block mb-4">
                   <div className="w-48 h-48 flex items-center justify-center">
                     {qrString ? (
-                      <div className="text-center">
-                        <div className="w-40 h-40 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-gray-200">
-                          <div className="text-xs text-gray-500 p-2 break-all font-mono leading-tight">
-                            {qrString.substring(0, 60)}...
-                          </div>
-                        </div>
-                      </div>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(qrString)}&format=png&margin=4`}
+                        alt="KHQR QR Code"
+                        width={192}
+                        height={192}
+                        className="w-48 h-48 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.onerror = null
+                          target.src = `https://chart.googleapis.com/chart?cht=qr&chs=192x192&chl=${encodeURIComponent(qrString)}&choe=UTF-8`
+                        }}
+                      />
                     ) : (
                       <div className="w-10 h-10 border-2 border-neon border-t-transparent rounded-full animate-spin" />
                     )}
@@ -215,9 +230,40 @@ function BakongCheckoutContent() {
                   <p>5. {locale === 'km' ? '\u1795\u17D2\u1791\u17BB\u1780\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3\u1781\u17B6\u1784\u1780\u17D2\u179A\u17C4\u1798' : 'Upload receipt below'}</p>
                 </div>
 
-                <button onClick={checkPayment} className="btn-neon text-sm mb-3 w-full">
-                  {locale === 'km' ? '\u1781\u17D2\u1789\u17BB\u17C6\u1794\u17B6\u1793\u1794\u1784\u17CB\u179A\u17BD\u1785\u17A0\u17BE\u1799, \u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u17A5\u17A1\u17BC\u179C\u1793\u17C1\u17C7' : "I've paid, check now"}
+                <button
+                  onClick={checkPayment}
+                  disabled={receiptRejected}
+                  className={`text-sm mb-3 w-full ${receiptRejected ? 'bg-white/10 text-white/30 cursor-not-allowed rounded-lg py-2.5' : 'btn-neon'}`}
+                >
+                  {receiptRejected
+                    ? (locale === 'km' ? 'ប៊ូតុងពិនិត្យត្រូវបានបិទ' : 'Verification disabled')
+                    : (locale === 'km' ? 'ខ្ញុំបានបង់រួចហើយ, ពិនិត្យឥឡូវនេះ' : "I've paid, check now")}
                 </button>
+
+                {receiptRejected && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-3 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <p className="text-red-400 text-sm font-semibold font-khmer">
+                        {locale === 'km' ? 'ការផ្ទៀងផ្ទាត់បង្កាន់ដៃបរាជ័យ!' : 'Receipt verification failed!'}
+                      </p>
+                    </div>
+                    <p className="text-white/50 text-xs font-khmer mb-3">{rejectionReason}</p>
+                    <a
+                      href="https://t.me/AF4STURF"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-neon/20 to-blue-600/20 border border-neon/30 text-neon text-sm font-semibold px-5 py-2.5 rounded-xl hover:from-neon/30 hover:to-blue-600/30 transition-all font-khmer"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                      </svg>
+                      {locale === 'km' ? 'ផ្ញើវិក័យប័ត្រទៅ Admin' : 'Send invoice to Admin'}
+                    </a>
+                  </div>
+                )}
               </>
             )}
           </motion.div>
