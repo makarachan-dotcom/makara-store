@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { randomBytes, createHash } from 'crypto'
+import { sendResetCode } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,9 +44,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // In production, send this code via email
-    // For now, we log it (in production, integrate with email service)
-    console.log(`Password reset code for ${email}: ${code}`)
+    // Send the code via email
+    try {
+      await sendResetCode(email, code)
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError)
+      return NextResponse.json({ error: 'មិនអាចផ្ញើអ៊ីមែលបានទេ។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។' }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
