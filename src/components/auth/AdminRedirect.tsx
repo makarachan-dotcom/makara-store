@@ -15,10 +15,6 @@ export default function AdminRedirect() {
     if (session?.user?.email !== ADMIN_EMAIL) return
     if (pathname?.startsWith('/admin')) return
 
-    const justLoggedIn = sessionStorage.getItem('admin-login-redirect')
-    if (justLoggedIn === 'done') return
-
-    sessionStorage.setItem('admin-login-redirect', 'done')
     window.location.href = '/admin/dashboard'
   }, [session, status, pathname])
 

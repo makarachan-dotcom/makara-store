@@ -35,6 +35,7 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (session?.user?.email === ADMIN_EMAIL) {
+      sessionStorage.removeItem('admin-login-redirect')
       window.location.href = '/admin/dashboard'
       return
     }
