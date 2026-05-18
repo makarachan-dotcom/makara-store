@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
 import { getProductImage } from '@/lib/product-images'
+import { getProductDescription } from '@/lib/product-descriptions'
 
 interface ProductVariant {
   label: string
@@ -149,6 +150,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const variants = generateVariants(product)
   const tags = getProductTags(product)
   const delivery = getDeliveryType(product)
+  const richDesc = getProductDescription(product.nameEn || product.slug)
   const currentVariant = variants[selectedVariant]
   const totalPrice = currentVariant.price * quantity
 
@@ -333,25 +335,71 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <svg className="w-5 h-5 text-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               <h2 className="text-lg font-display font-bold text-white">{locale === 'km' ? '\u1780\u17b6\u179a\u178e\u17c2\u1793\u17b6\u17c6\u1795\u179b\u17b7\u178f\u1795\u179b' : 'Product Introduction'}</h2>
             </div>
-            <div className="text-white/60 space-y-4 text-sm leading-relaxed font-khmer">
+            <div className="text-white/60 space-y-5 text-sm leading-relaxed font-khmer">
+              {/* Rich Description */}
               <p className="text-blue-400 font-medium">
-                {locale === 'km'
-                  ? `\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u179c\u17b7\u1792\u17b8\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb\u1795\u17d2\u179b\u17bc\u179c\u1780\u17b6\u179a\u178a\u17be\u1798\u17d2\u1794\u17b8\u178a\u17c6\u17a1\u17be\u1784 ${product.nameEn} \u179b\u17be\u1782\u178e\u178e\u17b8\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4`
-                  : `Use official payment methods to upgrade ${product.nameEn} on your account.`}
+                {richDesc
+                  ? (locale === 'km' ? richDesc.descKm : richDesc.descEn)
+                  : (locale === 'km'
+                    ? `\u1794\u17d2\u179a\u17be\u1794\u17d2\u179a\u17b6\u179f\u17cb\u179c\u17b7\u1792\u17b8\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb\u1795\u17d2\u179b\u17bc\u179c\u1780\u17b6\u179a\u178a\u17be\u1798\u17d2\u1794\u17b8\u178a\u17c6\u17a1\u17be\u1784 ${product.nameEn} \u179b\u17be\u1782\u178e\u178e\u17b8\u179a\u1794\u179f\u17cb\u17a2\u17d2\u1793\u1780\u17d4`
+                    : `Use official payment methods to upgrade ${product.nameEn} on your account.`)}
               </p>
               <p>{description || (locale === 'km' ? `${product.nameEn} - \u1795\u179b\u17b7\u178f\u1795\u179b\u178c\u17b8\u1787\u17b8\u178f\u179b\u1782\u17bb\u178e\u1797\u17b6\u1796\u1781\u17d2\u1796\u179f\u17cb\u1796\u17b8 Makara Store\u17d4` : `${product.nameEn} - High quality digital product from Makara Store.`)}</p>
+
+              {/* Upgrade Method */}
+              {richDesc && (
+                <div className="bg-gradient-to-r from-neon/5 to-transparent border-l-2 border-neon/30 pl-4 py-3">
+                  <p className="text-neon font-medium text-xs mb-1">{locale === 'km' ? '\u179c\u17b7\u1792\u17b8\u178a\u17c6\u17a1\u17be\u1784' : 'Upgrade Method'}</p>
+                  <p className="text-white/70">{locale === 'km' ? richDesc.upgradeMethodKm : richDesc.upgradeMethod}</p>
+                </div>
+              )}
+
+              {/* Features List */}
+              {richDesc && (
+                <div>
+                  <h4 className="text-white/80 font-semibold mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                    {locale === 'km' ? '\u1798\u17bb\u1781\u1784\u17b6\u179a\u1796\u17b7\u179f\u17c1\u179f' : 'Key Features'}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(locale === 'km' ? richDesc.featuresKm : richDesc.features).map((feature, i) => (
+                      <div key={i} className="flex items-start gap-2.5 bg-white/[0.02] rounded-lg px-3 py-2.5 border border-white/5">
+                        <div className="w-5 h-5 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <svg className="w-3 h-3 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <span className="text-white/60 text-xs">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price & Account Info */}
               <div className="bg-gradient-to-r from-gold/5 to-transparent border-l-2 border-gold/30 pl-4 py-2">
                 <p className="text-gold font-medium mb-2">{product.nameEn} (${product.price.toFixed(2)})</p>
                 <p className="text-white/50">{locale === 'km' ? '\u1782\u178e\u178e\u17b8\u1790\u17d2\u1798\u17b8/\u1785\u17b6\u179f\u17cb \u179f\u17bb\u1791\u17d2\u1792\u178f\u17c2\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793\u17d4' : 'Works with new/old accounts. Can be renewed early.'}</p>
+                {richDesc?.priceNote && (
+                  <p className="text-white/40 text-xs mt-1">{locale === 'km' ? richDesc.priceNoteKm : richDesc.priceNote}</p>
+                )}
               </div>
+
+              {/* Process */}
               <div>
                 <p className="text-white/70 font-medium mb-2">{locale === 'km' ? '\u178a\u17c6\u178e\u17be\u179a\u1780\u17b6\u179a\u17d6' : 'Process:'}</p>
                 <p className="text-neon">{locale === 'km' ? '\u1787\u17d2\u179a\u17be\u179f\u179a\u17be\u179f\u1795\u179b\u17b7\u178f\u1795\u179b \u2192 \u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb \u2192 \u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb \u2192 \u1791\u1791\u17bd\u179b\u1795\u179b\u17b7\u178f\u1795\u179b \u2192 \u179a\u17b8\u1780\u179a\u17b6\u1799!' : 'Select product \u2192 Pay \u2192 Verify \u2192 Receive product \u2192 Enjoy!'}</p>
               </div>
+
+              {/* Delivery Time */}
               <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
                 <h4 className="text-white/80 font-medium mb-2">{locale === 'km' ? '\u1796\u17c1\u179b\u179c\u17c1\u179b\u17b6\u178a\u17b9\u1780\u1787\u1789\u17d2\u1787\u17bc\u1793' : 'Delivery Time'}</h4>
-                <p className="text-white/50">{locale === 'km' ? '\u1787\u17b6\u1791\u17bc\u1791\u17c5 \u17e1\u17e0 \u179c\u17b7\u1793\u17b6\u1791\u17b8 ~ \u17e1 \u1793\u17b6\u1791\u17b8 \u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1789\u17d2\u1785\u1794\u17cb\u1780\u17b6\u179a\u178a\u17c6\u17a1\u17be\u1784' : 'Generally 10 seconds ~ 1 minute to complete the upgrade'}</p>
+                <p className="text-white/50">
+                  {richDesc
+                    ? (locale === 'km' ? richDesc.deliveryTimeKm : richDesc.deliveryTime)
+                    : (locale === 'km' ? '\u1787\u17b6\u1791\u17bc\u1791\u17c5 \u17e1\u17e0 \u179c\u17b7\u1793\u17b6\u1791\u17b8 ~ \u17e1 \u1793\u17b6\u1791\u17b8 \u178a\u17be\u1798\u17d2\u1794\u17b8\u1794\u1789\u17d2\u1785\u1794\u17cb\u1780\u17b6\u179a\u178a\u17c6\u17a1\u17be\u1784' : 'Generally 10 seconds ~ 1 minute to complete the upgrade')}
+                </p>
               </div>
+
+              {/* FAQ */}
               <div>
                 <h4 className="text-white/80 font-medium mb-3">{locale === 'km' ? '\u179f\u17c6\u178e\u17bd\u179a\u1791\u17bc\u1791\u17c5' : 'FAQ'}</h4>
                 <div className="space-y-3">
