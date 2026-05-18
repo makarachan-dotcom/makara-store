@@ -97,6 +97,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
+    // Auto-delete buy history and payment records when admin cancels/rejects order
+    if (status === 'CANCELLED' || status === 'REFUNDED') {
+      await prisma.bakongReceipt.deleteMany({ where: { orderId } })
+      await prisma.orderItem.deleteMany({ where: { orderId } })
+      await prisma.order.delete({ where: { id: orderId } })
+      return NextResponse.json({ success: true, deleted: true })
+    }
+
     const order = await prisma.order.update({
       where: { id: orderId },
       data: { status },

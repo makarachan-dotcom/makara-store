@@ -78,12 +78,20 @@ export async function POST(request: NextRequest) {
         formatNewOrderNotification(receipt.order.orderNumber, productName, receipt.order.totalAmount, 'BAKONG_KHQR')
       )
     } else {
-      await prisma.order.update({
+      // Auto-delete buy history and payment records when admin rejects
+      // Delete related bakong receipts first
+      await prisma.bakongReceipt.deleteMany({
+        where: { orderId: receipt.orderId },
+      })
+
+      // Delete order items
+      await prisma.orderItem.deleteMany({
+        where: { orderId: receipt.orderId },
+      })
+
+      // Delete the order itself
+      await prisma.order.delete({
         where: { id: receipt.orderId },
-        data: {
-          status: 'CANCELLED',
-          receiptStatus: 'ADMIN_REJECTED',
-        },
       })
     }
 

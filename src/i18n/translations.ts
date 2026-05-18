@@ -88,10 +88,17 @@ export const translations = {
     receiptUploaded: 'បង្កាន់ដៃត្រូវបានផ្ទុកដោយជោគជ័យ។',
     
     // ការផ្ទៀងផ្ទាត់
-    emailRequired: 'អ៊ីមែលត្រូវការ',
-    passwordRequired: 'ពាក្យសម្ងាត់ត្រូវការ',
-    invalidCredentials: 'ព័ត៌មានសម្ងាត់មិនត្រឹមត្រូវ',
-    accountCreated: 'គណនីត្រូវបានបង្កើត',
+    emailRequired: 'សូមបំពេញអ៊ីមែល',
+    passwordRequired: 'សូមបំពេញពាក្យសម្ងាត់',
+    invalidCredentials: 'អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ',
+    accountCreated: 'គណនីត្រូវបានបង្កើតដោយជោគជ័យ',
+    forgotPassword: 'ភ្លេចពាក្យសម្ងាត់?',
+    recoverAccount: 'សង្គ្រោះគណនី',
+    sendRecoveryCode: 'ផ្ញើលេខកូដសង្គ្រោះ',
+    verifyCode: 'ផ្ទៀងផ្ទាត់លេខកូដ',
+    resetPassword: 'កំណត់ពាក្យសម្ងាត់ថ្មី',
+    passwordChanged: 'ពាក្យសម្ងាត់បានផ្លាស់ប្តូរដោយជោគជ័យ!',
+    aiDisclaimer: 'AI អាចមានកំហុស',
     
     // Appearance
     appearance: 'ការបង្ហាញ',
@@ -177,6 +184,13 @@ export const translations = {
     passwordRequired: 'Password is required',
     invalidCredentials: 'Invalid credentials',
     accountCreated: 'Account created',
+    forgotPassword: 'Forgot password?',
+    recoverAccount: 'Recover Account',
+    sendRecoveryCode: 'Send Recovery Code',
+    verifyCode: 'Verify Code',
+    resetPassword: 'Reset Password',
+    passwordChanged: 'Password changed successfully!',
+    aiDisclaimer: 'AI can make mistakes',
     
     appearance: 'Appearance',
     darkMode: 'Dark',
