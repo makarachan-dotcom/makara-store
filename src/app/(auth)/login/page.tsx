@@ -38,7 +38,13 @@ function LoginPageContent() {
   useEffect(() => {
     if (redirectingRef.current) return
     if (session?.user?.email === ADMIN_EMAIL) {
+      // Prevent redirect loop if middleware keeps bouncing back
+      const key = 'admin-redirect-ts'
+      const last = sessionStorage.getItem(key)
+      if (last && Date.now() - parseInt(last, 10) < 5000) return
+
       redirectingRef.current = true
+      sessionStorage.setItem(key, String(Date.now()))
       window.location.href = '/admin/verify?callbackUrl=/admin/dashboard'
       return
     }
