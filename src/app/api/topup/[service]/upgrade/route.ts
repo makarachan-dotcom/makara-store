@@ -19,13 +19,22 @@ export async function POST(
       return NextResponse.json({ error: 'Missing card key' }, { status: 400 })
     }
 
-    // Verify card key exists and is sold (activated)
+    // Verify card key exists
     const key = await prisma.cardKey.findFirst({
-      where: { keyCode: cardKey.trim(), isSold: true },
+      where: { keyCode: cardKey.trim() },
     })
 
     if (!key) {
-      return NextResponse.json({ error: 'Invalid or inactive card key' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid card key' }, { status: 400 })
+    }
+
+    // Check if this key has already been redeemed
+    const existingTask = await prisma.topupTask.findFirst({
+      where: { cardKey: cardKey.trim() },
+    })
+
+    if (existingTask) {
+      return NextResponse.json({ error: 'Card key has already been redeemed' }, { status: 400 })
     }
 
     const serviceType = service.toUpperCase() as 'CHATGPT' | 'CLAUDE' | 'GEMINI'
