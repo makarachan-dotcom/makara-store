@@ -22,6 +22,7 @@ interface Order {
   createdAt: string
   user: { name: string | null; email: string }
   items: OrderItem[]
+  bakongReceipts?: Array<{ receiptImageUrl: string; adminStatus: string }>
 }
 
 const bankLabels: Record<string, string> = {
@@ -225,16 +226,32 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
 
-                      {order.paymentProof && (
-                        <div className="bg-obsidian-50 rounded-lg p-3">
-                          <p className="text-white/30 text-xs mb-2 font-khmer">{'\u1794\u1784\u17d2\u1780\u17b6\u1793\u17cb\u178a\u17c3\u1794\u1784\u17cb\u1794\u17d2\u179a\u17b6\u1780\u17cb'}</p>
-                          <img
-                            src={order.paymentProof}
-                            alt="Payment receipt"
-                            className="max-w-xs rounded-lg border border-white/10"
-                          />
-                        </div>
-                      )}
+                      {/* Payment Proof / Receipt Image */}
+                      {(() => {
+                        const receiptUrl = order.paymentProof || order.bakongReceipts?.[0]?.receiptImageUrl
+                        if (!receiptUrl) return (
+                          <div className="bg-obsidian-50 rounded-lg p-3">
+                            <p className="text-white/30 text-xs mb-2 font-khmer">{'បង្កាន់ដៃបង់ប្រាក់'}</p>
+                            <div className="bg-white/5 rounded-lg p-6 text-center border border-dashed border-white/10">
+                              <p className="text-white/20 text-sm">{'មិនមានរូបភាពបង្កាន់ដៃ'}</p>
+                              <p className="text-white/10 text-xs mt-1">{'No receipt image uploaded'}</p>
+                            </div>
+                          </div>
+                        )
+                        return (
+                          <div className="bg-obsidian-50 rounded-lg p-3">
+                            <p className="text-white/30 text-xs mb-2 font-khmer">{'បង្កាន់ដៃបង់ប្រាក់'}</p>
+                            <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="block">
+                              <img
+                                src={receiptUrl}
+                                alt="Payment receipt"
+                                className="max-w-sm w-full rounded-lg border border-white/10 hover:border-neon/30 transition-colors cursor-pointer"
+                              />
+                            </a>
+                            <p className="text-white/20 text-[10px] mt-1">{'ចុចលើរូបភាពដើម្បីពង្រីក'}</p>
+                          </div>
+                        )
+                      })()}
 
                       <div className="flex items-center gap-3">
                         <span className="text-white/40 text-xs font-khmer">{'\u1780\u17c2\u179f\u1798\u17d2\u179a\u17bd\u179b\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796:'}</span>

@@ -55,18 +55,29 @@ export default function CardKeysPage() {
     setImporting(true)
     setImportResult(null)
     try {
-      const keysArray = importKeys.split('\n').map(k => k.trim()).filter(Boolean)
+      const keysArray = importKeys
+        .split(/[\n,;]+/)
+        .map(k => k.trim())
+        .filter(Boolean)
+      if (keysArray.length === 0) {
+        setImportResult('No valid keys found in input')
+        return
+      }
       const res = await fetch('/api/admin/card-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: importProductId, keys: keysArray }),
       })
       const data = await res.json()
-      setImportResult(data.message || `Imported ${data.imported} keys`)
-      setImportKeys('')
-      await fetchKeys()
+      if (res.ok) {
+        setImportResult(data.message || `Imported ${data.imported || 0} keys`)
+        setImportKeys('')
+        await fetchKeys()
+      } else {
+        setImportResult(data.error || 'Import failed')
+      }
     } catch {
-      setImportResult('Import failed')
+      setImportResult('Import failed - network error')
     } finally {
       setImporting(false)
     }
@@ -118,14 +129,27 @@ export default function CardKeysPage() {
           <h3 className="text-neon font-semibold mb-3 text-sm">{'\u1794\u1789\u17D2\u1785\u17BC\u179B Card Keys \u1790\u17D2\u1798\u17B8'}</h3>
           <div className="space-y-3">
             <div>
-              <label className="text-white/40 text-xs block mb-1">Product ID</label>
-              <input
-                type="text"
-                value={importProductId}
-                onChange={e => setImportProductId(e.target.value)}
-                placeholder="Product ID"
-                className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/20 focus:border-neon/50 focus:outline-none"
-              />
+              <label className="text-white/40 text-xs block mb-1">{'ជ្រើសរើសផលិតផល'}</label>
+              {stockSummary.length > 0 ? (
+                <select
+                  value={importProductId}
+                  onChange={e => setImportProductId(e.target.value)}
+                  className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-neon/50 focus:outline-none"
+                >
+                  <option value="">{'-- ជ្រើសរើសផលិតផល --'}</option>
+                  {stockSummary.map(p => (
+                    <option key={p.productId} value={p.productId}>{p.productName}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={importProductId}
+                  onChange={e => setImportProductId(e.target.value)}
+                  placeholder="Product ID"
+                  className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/20 focus:border-neon/50 focus:outline-none"
+                />
+              )}
             </div>
             <div>
               <label className="text-white/40 text-xs block mb-1">{'\u1780\u17BC\u1793\u179F\u17C4 Card Keys (\u1798\u17BD\u1799\u1780\u17BC\u1793\u179F\u17C4\u1780\u17D2\u1793\u17BB\u1784\u1798\u17BD\u1799\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB)'}</label>

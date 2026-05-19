@@ -22,6 +22,7 @@ export async function GET() {
     include: {
       items: { include: { product: { select: { nameKm: true, nameEn: true, image: true } } } },
       user: { select: { name: true, email: true } },
+      bakongReceipts: { select: { receiptImageUrl: true, adminStatus: true }, orderBy: { createdAt: 'desc' }, take: 1 },
     },
     orderBy: { createdAt: 'desc' },
   })

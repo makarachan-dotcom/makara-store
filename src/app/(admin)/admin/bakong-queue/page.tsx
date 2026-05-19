@@ -74,8 +74,8 @@ export default function BakongQueuePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-white font-khmer">Bakong \u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB</h1>
-        <button onClick={fetchReceipts} className="btn-neon text-xs px-3 py-1.5">\u1792\u17D2\u179C\u17BE\u1794\u1785\u17D2\u1785\u17BB\u1794\u17D2\u1794\u1793\u17D2\u1793\u1797\u17B6\u1796</button>
+        <h1 className="text-2xl font-display font-bold text-white font-khmer">{'Bakong ផ្ទៀងផ្ទាត់'}</h1>
+        <button onClick={fetchReceipts} className="btn-neon text-xs px-3 py-1.5">{'ធ្វើបច្ចុប្បន្នភាព'}</button>
       </div>
 
       {/* Filters */}
@@ -83,14 +83,14 @@ export default function BakongQueuePage() {
         {(['all', 'PENDING_REVIEW', 'CONFIRMED', 'REJECTED'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs transition-all ${filter === f ? 'bg-neon/10 text-neon border border-neon/30' : 'text-white/40 border border-white/5 hover:border-white/10'}`}>
-            {f === 'all' ? '\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB' : f === 'PENDING_REVIEW' ? '\u179A\u1784\u17CB\u1785\u17B6\u17C6\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB' : f === 'CONFIRMED' ? '\u1794\u17B6\u1793\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB' : '\u1794\u17B6\u1793\u1794\u178A\u17B7\u179F\u17C1\u1792'}
+            {f === 'all' ? 'ទាំងអស់' : f === 'PENDING_REVIEW' ? 'រង់ចាំផ្ទៀងផ្ទាត់' : f === 'CONFIRMED' ? 'បានបញ្ជាក់' : 'បានបដិសេធ'}
           </button>
         ))}
       </div>
 
       {receipts.length === 0 ? (
         <div className="card-gaming p-8 text-center">
-          <p className="text-white/30 text-sm">\u1798\u17B7\u1793\u1798\u17B6\u1793\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3\u179A\u1784\u17CB\u1785\u17B6\u17C6\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB</p>
+          <p className="text-white/30 text-sm font-khmer">{'មិនមានបង្កាន់ដៃរង់ចាំផ្ទៀងផ្ទាត់'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -110,7 +110,7 @@ export default function BakongQueuePage() {
                     {receipt.receiptImageUrl ? (
                       <img src={receipt.receiptImageUrl} alt="Receipt" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white/20 text-2xl">\uD83D\uDCF7</div>
+                      <div className="w-full h-full flex items-center justify-center text-white/20 text-2xl">{'\uD83D\uDCF7'}</div>
                     )}
                   </div>
 
@@ -135,23 +135,23 @@ export default function BakongQueuePage() {
                       disabled={processing === receipt.id}
                       className="flex-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs py-2 rounded-lg hover:bg-green-500/20 transition-colors disabled:opacity-50"
                     >
-                      {processing === receipt.id ? '...' : '\u2713 \u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB'}
+                      {processing === receipt.id ? '...' : '✓ បញ្ជាក់'}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleAction(receipt.id, 'reject') }}
                       disabled={processing === receipt.id}
                       className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 text-xs py-2 rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50"
                     >
-                      {processing === receipt.id ? '...' : '\u2717 \u1794\u178A\u17B7\u179F\u17C1\u1792'}
+                      {processing === receipt.id ? '...' : '✗ បដិសេធ'}
                     </button>
                   </div>
                 )}
 
                 {receipt.adminStatus === 'CONFIRMED' && (
-                  <div className="mt-3 text-center text-green-400 text-xs bg-green-500/5 py-1.5 rounded-lg">\u2713 \u1794\u17B6\u1793\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB</div>
+                  <div className="mt-3 text-center text-green-400 text-xs bg-green-500/5 py-1.5 rounded-lg">{'✓ បានបញ្ជាក់'}</div>
                 )}
                 {receipt.adminStatus === 'REJECTED' && (
-                  <div className="mt-3 text-center text-red-400 text-xs bg-red-500/5 py-1.5 rounded-lg">\u2717 \u1794\u17B6\u1793\u1794\u178A\u17B7\u179F\u17C1\u1792</div>
+                  <div className="mt-3 text-center text-red-400 text-xs bg-red-500/5 py-1.5 rounded-lg">{'✗ បានបដិសេធ'}</div>
                 )}
               </motion.div>
             )
@@ -190,11 +190,11 @@ export default function BakongQueuePage() {
               {/* Details */}
               <div className="space-y-3">
                 <div>
-                  <span className="text-white/40 text-xs">\u17A2\u17CA\u17B8\u1798\u17C2\u179B\u17A2\u178F\u17B7\u1790\u17B7\u1787\u1793</span>
+                  <span className="text-white/40 text-xs font-khmer">{'អ៊ីមែលអតិថិជន'}</span>
                   <p className="text-white text-sm">{selectedReceipt.customerEmail}</p>
                 </div>
                 <div>
-                  <span className="text-white/40 text-xs">\u1785\u17C6\u1793\u17BD\u1793\u1794\u17D2\u179A\u17B6\u1780\u17CB</span>
+                  <span className="text-white/40 text-xs font-khmer">{'ចំនួនប្រាក់'}</span>
                   <p className="text-gold font-bold">${selectedReceipt.amount.toFixed(2)}</p>
                 </div>
                 <div>
@@ -226,14 +226,14 @@ export default function BakongQueuePage() {
                       disabled={processing === selectedReceipt.id}
                       className="flex-1 bg-green-500/10 border border-green-500/30 text-green-400 text-sm py-2.5 rounded-lg hover:bg-green-500/20 disabled:opacity-50"
                     >
-                      \u2713 \u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB\u1780\u17B6\u179A\u1794\u1784\u17CB\u1794\u17D2\u179A\u17B6\u1780\u17CB
+                      {'✓ បញ្ជាក់ការបង់ប្រាក់'}
                     </button>
                     <button
                       onClick={() => handleAction(selectedReceipt.id, 'reject')}
                       disabled={processing === selectedReceipt.id}
                       className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 text-sm py-2.5 rounded-lg hover:bg-red-500/20 disabled:opacity-50"
                     >
-                      \u2717 \u1794\u178A\u17B7\u179F\u17C1\u1792\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3
+                      {'✗ បដិសេធបង្កាន់ដៃ'}
                     </button>
                   </div>
                 )}
