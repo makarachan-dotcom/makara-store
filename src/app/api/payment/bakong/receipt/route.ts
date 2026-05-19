@@ -114,37 +114,20 @@ export async function POST(request: NextRequest) {
 
     const rawBuffer = Buffer.from(rawBytes)
 
-    const [compressed, ocrResult] = await Promise.all([
-      compressImage(rawBuffer, file.type),
-      (async () => {
-        try {
-          const Tesseract = await import('tesseract.js')
-          const worker = await Tesseract.createWorker('eng')
-          const { data } = await worker.recognize(rawBuffer)
-          await worker.terminate()
-          return data.text
-        } catch {
-          return 'OCR_UNAVAILABLE'
-        }
-      })(),
-    ])
-
+    // Compress image (fast) — skip slow OCR to return response quickly
+    const compressed = await compressImage(rawBuffer, file.type)
     const receiptImageUrl = `data:${compressed.type};base64,${compressed.data.toString('base64')}`
 
-    const analysis = analyzeReceipt(ocrResult, order.totalAmount, orderId)
-
-    const adminStatus = analysis.riskScore <= 20 ? 'CONFIRMED' : 'PENDING_REVIEW'
-    const receiptStatus = analysis.riskScore <= 20 ? 'AI_APPROVED' : 'PENDING'
-
+    // Save receipt immediately with PENDING status (no OCR blocking)
     const [receipt] = await Promise.all([
       prisma.bakongReceipt.create({
         data: {
           orderId,
           receiptImageUrl,
-          ocrText: ocrResult,
-          aiRiskScore: analysis.riskScore,
-          aiVerificationDetails: JSON.parse(JSON.stringify(analysis)),
-          adminStatus,
+          ocrText: '',
+          aiRiskScore: 50,
+          aiVerificationDetails: {},
+          adminStatus: 'PENDING_REVIEW',
         },
       }),
       prisma.order.update({
@@ -152,21 +135,60 @@ export async function POST(request: NextRequest) {
         data: {
           status: 'PAYMENT_UPLOADED',
           paymentProof: receiptImageUrl,
-          receiptStatus,
+          receiptStatus: 'PENDING',
         },
       }),
     ])
 
-    if (analysis.riskScore > 60) {
-      sendTelegramNotification(formatFraudAlert(order.orderNumber, analysis.riskScore)).catch(() => {})
-    }
+    // Fire-and-forget: run OCR + risk analysis in background, update receipt record
+    ;(async () => {
+      try {
+        let ocrText = 'OCR_UNAVAILABLE'
+        try {
+          const Tesseract = await import('tesseract.js')
+          const worker = await Tesseract.createWorker('eng')
+          const { data } = await worker.recognize(rawBuffer)
+          await worker.terminate()
+          ocrText = data.text
+        } catch {
+          // OCR failed, keep default
+        }
+
+        const analysis = analyzeReceipt(ocrText, order.totalAmount, orderId)
+        const adminStatus = analysis.riskScore <= 20 ? 'CONFIRMED' : 'PENDING_REVIEW'
+        const receiptStatus = analysis.riskScore <= 20 ? 'AI_APPROVED' : 'PENDING'
+
+        await Promise.all([
+          prisma.bakongReceipt.update({
+            where: { id: receipt.id },
+            data: {
+              ocrText,
+              aiRiskScore: analysis.riskScore,
+              aiVerificationDetails: JSON.parse(JSON.stringify(analysis)),
+              adminStatus,
+            },
+          }),
+          prisma.order.update({
+            where: { id: orderId },
+            data: { receiptStatus },
+          }),
+        ])
+
+        if (analysis.riskScore > 60) {
+          sendTelegramNotification(formatFraudAlert(order.orderNumber, analysis.riskScore)).catch(() => {})
+        }
+      } catch (bgError) {
+        console.error('Background OCR/analysis error:', bgError)
+      }
+    })()
 
     return NextResponse.json({
       receiptId: receipt.id,
-      riskScore: analysis.riskScore,
-      riskLevel: analysis.riskScore <= 20 ? 'green' : analysis.riskScore <= 60 ? 'yellow' : 'red',
-      checks: analysis,
-      status: adminStatus === 'CONFIRMED' ? 'AI_APPROVED' : 'PENDING_REVIEW',
+      riskScore: 50,
+      riskLevel: 'yellow',
+      checks: {},
+      status: 'PENDING_REVIEW',
+      success: true,
     })
   } catch (error) {
     console.error('Receipt upload error:', error)

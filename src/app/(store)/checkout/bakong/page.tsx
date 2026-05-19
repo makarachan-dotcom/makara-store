@@ -3,12 +3,28 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStore } from '@/store/useStore'
 
 type PaymentStatus = 'generating' | 'waiting' | 'uploading' | 'uploaded' | 'verified' | 'error'
+
+function SuccessToast({ message }: { message: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -40 }}
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-green-500/90 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2"
+    >
+      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+      <span className="text-sm font-semibold font-khmer">{message}</span>
+    </motion.div>
+  )
+}
 
 export default function BakongCheckoutPage() {
   return (
@@ -42,6 +58,8 @@ function BakongCheckoutContent() {
   const [error, setError] = useState('')
   const [receiptRejected, setReceiptRejected] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
+  const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null)
 
   // Generate KHQR on mount
   useEffect(() => {
@@ -172,20 +190,17 @@ function BakongCheckoutContent() {
       formData.append('orderId', orderId)
       const res = await fetch('/api/payment/bakong/receipt', { method: 'POST', body: formData })
       const data = await res.json()
-      if (data.receiptId) {
+      if (data.receiptId || data.success) {
         setRiskResult({ riskScore: data.riskScore, riskLevel: data.riskLevel, status: data.status })
         setStatus('uploaded')
-        if (data.status === 'AI_APPROVED') {
-          clearCart()
-        }
-        if (data.riskLevel === 'red' || data.status === 'PENDING_REVIEW') {
-          setReceiptRejected(true)
-          setRejectionReason(
-            locale === 'km'
-              ? 'ប្រព័ន្ធមិនអាចកំណត់អត្តសញ្ញាណបង្កាន់ដៃបានទេ។ ប៊ូតុងពិនិត្យការបង់ប្រាក់ត្រូវបានបិទ។ សូមផ្ញើវិក័យប័ត្រទៅកាន់ Admin តាម Telegram ជំនួស។'
-              : 'System could not verify the receipt. Payment verification button is disabled. Please send the invoice to Admin via Telegram instead.'
-          )
-        }
+        clearCart()
+
+        // Show success toast
+        setShowSuccessToast(true)
+        setTimeout(() => setShowSuccessToast(false), 4000)
+
+        // Start auto-redirect countdown (3 seconds)
+        setRedirectCountdown(3)
       } else {
         setError(data.error || 'Upload failed')
         setStatus('error')
@@ -196,6 +211,17 @@ function BakongCheckoutContent() {
     }
   }
 
+  // Auto-redirect countdown after successful upload
+  useEffect(() => {
+    if (redirectCountdown === null) return
+    if (redirectCountdown <= 0) {
+      router.push(`/order/${orderId}`)
+      return
+    }
+    const timer = setTimeout(() => setRedirectCountdown(redirectCountdown - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [redirectCountdown, router, orderId])
+
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 
   if (!orderId) {
@@ -205,6 +231,13 @@ function BakongCheckoutContent() {
 
   return (
     <div className="cyber-grid-bg min-h-screen">
+      {/* Success Toast */}
+      <AnimatePresence>
+        {showSuccessToast && (
+          <SuccessToast message={locale === 'km' ? '\u179C\u17B7\u1780\u17D2\u1780\u1799\u1794\u178F\u17D2\u179A\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u17A2\u17B6\u1794\u17CB\u17A1\u17BC\u178F\u1787\u17C4\u1782\u1787\u17D0\u1799!' : 'Receipt uploaded successfully!'} />
+        )}
+      </AnimatePresence>
+
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <Link href="/checkout" className="text-white/30 hover:text-neon transition-colors">
@@ -339,46 +372,35 @@ function BakongCheckoutContent() {
         )}
 
         {/* Upload Result */}
-        {status === 'uploaded' && riskResult && (
+        {status === 'uploaded' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-gaming p-6 mb-6 text-center">
-            <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
-              riskResult.riskLevel === 'green' ? 'bg-green-500/10' : riskResult.riskLevel === 'yellow' ? 'bg-yellow-500/10' : 'bg-red-500/10'
-            }`}>
-              {riskResult.riskLevel === 'green' ? (
-                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
+            <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 bg-green-500/10">
+              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
 
-            <h2 className="text-lg font-bold text-white mb-2">
-              {riskResult.status === 'AI_APPROVED'
-                ? (locale === 'km' ? '\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u17A2\u1793\u17BB\u1798\u17D0\u178F' : 'Receipt Approved!')
-                : (locale === 'km' ? '\u1780\u17C6\u1796\u17BB\u1784\u179A\u1784\u17CB\u1785\u17B6\u17C6\u1780\u17B6\u179A\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB' : 'Pending Admin Review')}
+            <h2 className="text-lg font-bold text-white mb-2 font-khmer">
+              {locale === 'km' ? '\u179C\u17B7\u1780\u17D2\u1780\u1799\u1794\u178F\u17D2\u179A\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u17A2\u17B6\u1794\u17CB\u17A1\u17BC\u178F\u1787\u17C4\u1782\u1787\u17D0\u1799!' : 'Receipt Uploaded Successfully!'}
             </h2>
 
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-sm text-white/50">AI Score:</span>
-              <span className={`text-sm font-bold ${
-                riskResult.riskLevel === 'green' ? 'text-green-400' : riskResult.riskLevel === 'yellow' ? 'text-yellow-400' : 'text-red-400'
-              }`}>{riskResult.riskScore}/100</span>
-            </div>
-
-            <p className="text-white/50 text-sm mb-4">
-              {riskResult.status === 'AI_APPROVED'
-                ? (locale === 'km' ? '\u1780\u17B6\u179A\u1794\u1789\u17D2\u1787\u17B6\u178F\u17B7\u1789\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u1793\u17B9\u1784\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB\u17D4' : 'Your order has been verified and is being processed.')
-                : (locale === 'km' ? 'Admin \u1793\u17B9\u1784\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u17D4' : 'Admin will verify your receipt shortly.')}
+            <p className="text-white/50 text-sm mb-4 font-khmer">
+              {locale === 'km' ? 'Admin \u1793\u17B9\u1784\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB\u1794\u1784\u17D2\u1780\u17B6\u1793\u17CB\u178A\u17C3\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u17D4' : 'Admin will verify your receipt shortly.'}
             </p>
 
+            {redirectCountdown !== null && redirectCountdown > 0 && (
+              <p className="text-neon text-xs mb-4 font-khmer">
+                {locale === 'km'
+                  ? `\u1780\u17C6\u1796\u17BB\u1784\u1794\u1789\u17D2\u1787\u17BC\u1793\u1791\u17C5\u1780\u17B6\u1793\u17CB\u1780\u17B6\u179A\u1794\u1789\u17D2\u1787\u17B6\u178F\u17B7\u1789\u1780\u17D2\u1793\u17BB\u1784 ${redirectCountdown} \u179C\u17B7\u1793\u17B6\u1791\u17B8...`
+                  : `Redirecting to your order in ${redirectCountdown}s...`}
+              </p>
+            )}
+
             <div className="flex gap-3 justify-center">
-              <Link href="/purchase-history" className="btn-neon text-sm">
-                {locale === 'km' ? '\u1798\u17BE\u179B\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u1791\u17B7\u1789' : 'View Orders'}
+              <Link href={`/order/${orderId}`} className="btn-neon text-sm font-khmer">
+                {locale === 'km' ? '\u1798\u17BE\u179B\u1780\u17B6\u179A\u1794\u1789\u17D2\u1787\u17B6\u178F\u17B7\u1789' : 'View Order'}
               </Link>
-              <Link href="/" className="btn-gold text-sm">
+              <Link href="/" className="btn-gold text-sm font-khmer">
                 {locale === 'km' ? '\u1794\u1793\u17D2\u178F\u178F\u17B7\u1789\u178F\u17C6\u1793\u17B7\u1789' : 'Continue Shopping'}
               </Link>
             </div>
