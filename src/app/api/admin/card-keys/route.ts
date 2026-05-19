@@ -23,7 +23,7 @@ export async function GET() {
       },
     })
 
-    const inventory = products.map((p) => ({
+    const stockSummary = products.map((p) => ({
       productId: p.id,
       productName: p.nameEn,
       productNameKm: p.nameKm,
@@ -32,7 +32,26 @@ export async function GET() {
       sold: p.cardKeys.filter((k) => k.isSold).length,
     }))
 
-    return NextResponse.json({ inventory })
+    // Fetch individual keys for the table
+    const keys = await prisma.cardKey.findMany({
+      include: { product: { select: { nameEn: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    })
+
+    return NextResponse.json({
+      stockSummary,
+      keys: keys.map((k) => ({
+        id: k.id,
+        productId: k.productId,
+        productName: k.product.nameEn,
+        keyCode: k.keyCode,
+        isSold: k.isSold,
+        orderId: k.orderId,
+        createdAt: k.createdAt.toISOString(),
+        soldAt: k.soldAt?.toISOString() || null,
+      })),
+    })
   } catch (error) {
     console.error('Card keys error:', error)
     return NextResponse.json({ error: 'Failed to load inventory' }, { status: 500 })
@@ -73,7 +92,7 @@ export async function POST(request: NextRequest) {
       await sendTelegramNotification(formatLowStockAlert(product.nameEn, remaining))
     }
 
-    return NextResponse.json({ created: created.count, totalAvailable: remaining })
+    return NextResponse.json({ imported: created.count, message: `Imported ${created.count} keys successfully`, totalAvailable: remaining })
   } catch (error) {
     console.error('Card key import error:', error)
     return NextResponse.json({ error: 'Failed to import keys' }, { status: 500 })
