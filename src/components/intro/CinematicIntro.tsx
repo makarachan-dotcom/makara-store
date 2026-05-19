@@ -87,8 +87,8 @@ export default function CinematicIntro() {
             >
               <h1 className="text-2xl md:text-4xl font-display font-bold tracking-wider"
                   style={{ textShadow: '0 0 20px rgba(0,242,254,0.6)' }}>
-                <span className="text-neon">Made with</span>{' '}
-                <span className="text-gold">Unreal Engine 5</span>
+                <span className="text-neon">Welcome to</span>{' '}
+                <span className="text-gold">Makara Store</span>
               </h1>
 
               <motion.p

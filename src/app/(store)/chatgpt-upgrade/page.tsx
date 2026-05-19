@@ -1,127 +1,35 @@
 'use client'
 
-// ទំព័រដំឡើង ChatGPT - Self-Service Upgrade System
 import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/hooks/useTranslation'
-import { useStore } from '@/store/useStore'
 import Link from 'next/link'
 
 type ServiceTab = 'chatgpt' | 'claude' | 'gemini'
 type UpgradeStep = 1 | 2 | 3 | 4
 
-interface PlanOption {
-  id: string
-  nameKm: string
-  nameEn: string
-  price: number
-  originalPrice?: number
-  descKm: string
-  descEn: string
-  features: string[]
-  badge?: string
-  badgeKm?: string
-}
-
-const SERVICE_PLANS: Record<ServiceTab, PlanOption[]> = {
-  chatgpt: [
-    {
-      id: 'chatgpt-plus-1m',
-      nameKm: 'ChatGPT Plus - \u17E1 \u1781\u17C2',
-      nameEn: 'ChatGPT Plus - 1 Month',
-      price: 20.00,
-      originalPrice: 20.00,
-      descKm: 'Plus \u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u1794\u17BE\u1780/\u1794\u1793\u17D2\u178F \u178A\u17C6\u17A1\u17BE\u1784100% \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A iOS',
-      descEn: 'Auto open/renew Plus, 100% official iOS in-app purchase',
-      features: ['GPT-4o', 'DALL-E 3', 'Advanced Data Analysis', 'Web Browsing', 'Code Interpreter'],
-    },
-    {
-      id: 'chatgpt-plus-3m',
-      nameKm: 'ChatGPT Plus - \u17E3 \u1781\u17C2',
-      nameEn: 'ChatGPT Plus - 3 Months',
-      price: 55.00,
-      originalPrice: 60.00,
-      descKm: '\u179F\u1793\u17D2\u179F\u17C6\u179F\u17C6\u1785\u17C3\u1787\u17B6\u1798\u17BD\u1799\u1782\u1798\u17D2\u179A\u17C4\u1784 \u17E3 \u1781\u17C2 \u178A\u17C6\u17A1\u17BE\u1784100% \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A',
-      descEn: 'Save with 3-month plan, 100% official upgrade',
-      features: ['GPT-4o', 'DALL-E 3', 'Advanced Data Analysis', 'Priority Access', 'Web Browsing'],
-      badge: 'Most Popular',
-      badgeKm: '\u1796\u17C1\u1789\u1793\u17B7\u1799\u1798\u1794\u17C6\u1795\u17BB\u178F',
-    },
-    {
-      id: 'chatgpt-pro-1m',
-      nameKm: 'ChatGPT Pro - \u17E1 \u1781\u17C2',
-      nameEn: 'ChatGPT Pro - 1 Month',
-      price: 69.00,
-      originalPrice: 200.00,
-      descKm: '\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u178A\u17C6\u17A1\u17BE\u1784 Pro 5x 20x',
-      descEn: 'Auto upgrade to Pro 5x 20x usage',
-      features: ['GPT-4o Unlimited', 'o1 Pro Mode', 'Advanced Voice', 'Maximum Usage Limits', 'Research Preview'],
-    },
-  ],
-  claude: [
-    {
-      id: 'claude-pro-1m',
-      nameKm: 'Claude Pro - \u17E1 \u1781\u17C2',
-      nameEn: 'Claude Pro - 1 Month',
-      price: 23.00,
-      originalPrice: 20.00,
-      descKm: '\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u178A\u17C6\u17A1\u17BE\u1784 Claude Pro 100% \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A',
-      descEn: 'Auto upgrade Claude Pro, 100% official direct charge',
-      features: ['Claude 3.5 Sonnet', 'Priority Access', 'More Usage', 'Projects'],
-    },
-    {
-      id: 'claude-team-1m',
-      nameKm: 'Claude Team - \u17E1 \u1781\u17C2',
-      nameEn: 'Claude Team Seat - 1 Month',
-      price: 26.00,
-      originalPrice: 30.00,
-      descKm: '\u1780\u17D2\u179A\u17BB\u1798\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB \u1798\u17B6\u1793\u1785\u17D2\u179A\u17BE\u1793\u1787\u17B6\u1784 25% \u1793\u17C3\u1794\u179A\u17B7\u1798\u17B6\u178E\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1781\u17D2\u179B\u17BD\u1793',
-      descEn: 'Team edition, 25% more quota than individual',
-      features: ['Claude 3.5 Sonnet', 'Team Workspace', 'Admin Console', '25% More Quota'],
-      badge: 'Team',
-      badgeKm: '\u1780\u17D2\u179A\u17BB\u1798',
-    },
-  ],
-  gemini: [
-    {
-      id: 'gemini-pro-yearly',
-      nameKm: 'Gemini Pro - \u17E1 \u1786\u17D2\u1793\u17B6\u17C6',
-      nameEn: 'Gemini Pro - 1 Year',
-      price: 16.50,
-      originalPrice: 19.99,
-      descKm: '\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7\u178A\u17C6\u17A1\u17BE\u1784\u1791\u17C5\u1782\u178E\u1793\u17B8\u1795\u17D2\u1791\u17B6\u179B\u17CB\u1781\u17D2\u179B\u17BD\u1793',
-      descEn: 'Self-service charge to your own account, pixel guaranteed',
-      features: ['Gemini Pro 1.5', 'Google One AI Premium', '2TB Storage', 'Priority Access'],
-    },
-  ],
-}
-
 const STEPS_KM = [
-  { num: 1, label: '\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB\u1780\u17BC\u178A' },
-  { num: 2, label: '\u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u179F\u17BB\u179C\u178F\u17D2\u1790\u17B7\u1797\u17B6\u1796' },
-  { num: 3, label: '\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784' },
-  { num: 4, label: '\u1794\u17BE\u1780\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A' },
+  { num: 1, label: 'ផ្ទៀងផ្ទាត់កូដ' },
+  { num: 2, label: 'ព័ត៌មានគណនី' },
+  { num: 3, label: 'បញ្ជាក់ការដំឡើង' },
+  { num: 4, label: 'បើកដំណើរការ' },
 ]
 
 const STEPS_EN = [
   { num: 1, label: 'Verify Code' },
-  { num: 2, label: 'Security Check' },
+  { num: 2, label: 'Account Info' },
   { num: 3, label: 'Confirm' },
   { num: 4, label: 'Activate' },
 ]
 
 const NOTICES_KM = [
   {
-    title: '\u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u179F\u17D2\u178F\u17BB\u1780\u1798\u17BB\u1793',
-    text: '\u1798\u17BB\u1793\u1796\u17C1\u179B\u178A\u17C6\u17A1\u17BE\u1784 \u179F\u17BC\u1798\u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u179F\u17D2\u1790\u17B6\u1793\u1797\u17B6\u1796\u179F\u17D2\u178F\u17BB\u1780\u1795\u179B\u17B7\u178F\u1795\u179B\u17D4 \u1794\u17D2\u179A\u179F\u17B7\u1793\u1794\u17BE\u1794\u1784\u17D2\u17A0\u17B6\u1789 "\u17A2\u179F\u17CB\u179F\u17D2\u178F\u17BB\u1780" \u179F\u17BC\u1798\u179A\u1784\u17CB\u1785\u17B6\u17C6\u1780\u17B6\u179A\u1794\u17C6\u1796\u17C1\u1789\u1794\u1793\u17D2\u1790\u17C2\u1798\u17D4',
+    title: 'ពិនិត្យស្តុកមុន',
+    text: 'មុនពេលដំឡើង សូមពិនិត្យស្ថានភាពស្តុកផលិតផល។ ប្រសិនបើបង្ហាញ "អស់ស្តុក" សូមរង់ចាំការបំពេញបន្ថែម។',
   },
   {
-    title: '\u1780\u17C6\u17A0\u17BB\u179F "\u1782\u17D2\u1798\u17B6\u1793\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u179B\u1798\u17D2\u17A2\u17B7\u178F"',
-    text: '\u1794\u17D2\u179A\u179F\u17B7\u1793\u1794\u17BE\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784\u1794\u1784\u17D2\u17A0\u17B6\u1789 "\u1794\u179A\u17B6\u1787\u17D0\u1799 \u1782\u17D2\u1798\u17B6\u1793\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u179B\u1798\u17D2\u17A2\u17B7\u178F" \u179F\u17BC\u1798\u1780\u17BB\u17C6\u1797\u17D0\u1799! \u1793\u17C1\u17C7\u1794\u178E\u17D2\u178F\u17B6\u179B\u1798\u1780\u1796\u17B8\u1794\u178E\u17D2\u178F\u17B6\u1789\u1798\u17B6\u1793\u1780\u17B6\u179A\u1796\u1793\u17D2\u1799\u17BA\u178F\u17D4 \u179F\u17BC\u1798\u1785\u17BC\u179B ChatGPT \u17A0\u17BE\u1799\u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u1798\u17BE\u179B \u1780\u17B6\u179A\u1780\u17C6\u178E\u178F\u17CB \u2192 \u178A\u17C6\u17A1\u17BE\u1784 Plus/Pro\u17D4 \u1787\u17B6\u1791\u17BC\u1791\u17C5\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784\u1794\u17B6\u1793\u1787\u17C4\u1782\u1787\u17D0\u1799\u17A0\u17BE\u1799\u17D4',
-  },
-  {
-    title: '\u17A2\u17C6\u1796\u17B8\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784\u179B\u17BE\u1782\u17D2\u1793\u17B6',
-    text: '\u1794\u17D2\u179A\u179F\u17B7\u1793\u1794\u17BE\u1782\u178E\u1793\u17B8\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u1794\u1785\u17D2\u1785\u17BB\u1794\u17D2\u1794\u1793\u17D2\u1793\u1787\u17B6 Plus/Pro \u179F\u17BC\u1798\u1780\u17BB\u17C6\u178A\u17C6\u17A1\u17BE\u1784\u179B\u17BE\u1782\u17D2\u1793\u17B6 \u1796\u17D2\u179A\u17C4\u17C7\u179A\u1799\u17C8\u1796\u17C1\u179B\u1785\u17B6\u179F\u17CB\u1793\u17B9\u1784\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u1782\u178E\u1793\u17B6\u17A1\u17BE\u1784\u179C\u17B7\u1789 \u1798\u17B7\u1793\u1794\u1793\u17D2\u1790\u17C2\u1798\u1791\u17C1! \u179F\u17BC\u1798\u179A\u1784\u17CB\u1785\u17B6\u17C6\u179A\u17A0\u17BC\u178F\u178A\u179B\u17CB\u1795\u17BB\u178F\u1780\u17C6\u178E\u178F\u17CB \u179A\u17BD\u1785\u178A\u17C6\u17A1\u17BE\u1784\u179C\u17B7\u1789\u17D4',
+    title: 'អំពីការដំឡើងលើគ្នា',
+    text: 'ប្រសិនបើគណនីរបស់អ្នកបច្ចុប្បន្នជា Plus/Pro ការបញ្ចូលផ្ទាល់នឹងសរសេរជាន់ (គណនាឡើងវិញ) រយៈពេលដែលមាន មិនបន្ថែមទេ! សូមរង់ចាំដល់ផុតកំណត់ រួចបញ្ចូលឡើងវិញ។',
   },
 ]
 
@@ -131,10 +39,6 @@ const NOTICES_EN = [
     text: 'Before upgrading, please check the product stock status. If it shows "Out of Stock", please wait for restocking.',
   },
   {
-    title: '"No Detailed Info" Error',
-    text: 'If the upgrade shows "Failed, no detailed info", don\'t panic! This is due to network delay with gift card subscription status. Go to ChatGPT website, check Settings \u2192 Upgrade Plus/Pro. The upgrade has most likely succeeded.',
-  },
-  {
     title: 'About Stacking Upgrades',
     text: 'If your account is currently Plus/Pro, force-charging will overwrite (recalculate) the existing period, not stack! Wait until expiry then recharge.',
   },
@@ -142,78 +46,162 @@ const NOTICES_EN = [
 
 export default function ChatGPTUpgradePage() {
   const { locale } = useTranslation()
-  const addToCart = useStore((s) => s.addToCart)
   const [activeTab, setActiveTab] = useState<ServiceTab>('chatgpt')
   const [currentStep, setCurrentStep] = useState<UpgradeStep>(1)
-  const [selectedPlan, setSelectedPlan] = useState<PlanOption | null>(null)
   const [serialCode, setSerialCode] = useState('')
-  const [sessionData, setSessionData] = useState('')
+  const [accountEmail, setAccountEmail] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showIntro, setShowIntro] = useState(true)
+  const [verifyResult, setVerifyResult] = useState<{ valid: boolean; product?: string; productKm?: string } | null>(null)
+  const [verifyError, setVerifyError] = useState('')
+  const [taskId, setTaskId] = useState<string | null>(null)
+  const [taskStatus, setTaskStatus] = useState<string>('')
+  const [taskMessage, setTaskMessage] = useState<string>('')
+  const [upgradeError, setUpgradeError] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const plans = SERVICE_PLANS[activeTab]
   const steps = locale === 'km' ? STEPS_KM : STEPS_EN
   const notices = locale === 'km' ? NOTICES_KM : NOTICES_EN
 
   const handleTabChange = useCallback((tab: ServiceTab) => {
     setActiveTab(tab)
     setCurrentStep(1)
-    setSelectedPlan(null)
     setSerialCode('')
-    setSessionData('')
+    setAccountEmail('')
     setIsCompleted(false)
+    setVerifyResult(null)
+    setVerifyError('')
+    setTaskId(null)
+    setUpgradeError('')
   }, [])
 
   const handleStartService = useCallback(() => {
     setShowIntro(false)
   }, [])
 
-  const handleVerifyCode = useCallback(() => {
+  const handleVerifyCode = useCallback(async () => {
     if (!serialCode.trim()) return
-    setCurrentStep(2)
-  }, [serialCode])
-
-  const handleSecurityCheck = useCallback(() => {
-    if (!sessionData.trim()) return
-    setCurrentStep(3)
-  }, [sessionData])
-
-  const handleConfirmUpgrade = useCallback(() => {
-    setCurrentStep(4)
+    setVerifyError('')
     setIsProcessing(true)
 
-    setTimeout(() => {
-      setIsProcessing(false)
-      setIsCompleted(true)
+    try {
+      const res = await fetch('/api/topup/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardKey: serialCode.trim() }),
+      })
+      const data = await res.json()
 
-      if (selectedPlan) {
-        addToCart({
-          productId: selectedPlan.id,
-          name: locale === 'km' ? selectedPlan.nameKm : selectedPlan.nameEn,
-          price: selectedPlan.price,
-          image: '/images/logo.jpg',
-          quantity: 1,
-          metadata: { upgradeType: selectedPlan.id, serialCode },
-        })
+      if (data.valid) {
+        setVerifyResult(data)
+        setCurrentStep(2)
+      } else {
+        setVerifyError(
+          locale === 'km'
+            ? 'កូដមិនត្រឹមត្រូវ ឬមិនទាន់បានដំណើរការ។ សូមពិនិត្យមើលកូដរបស់អ្នកម្តងទៀត។'
+            : 'Invalid code or not yet activated. Please check your code and try again.'
+        )
       }
-    }, 3000)
-  }, [selectedPlan, locale, addToCart, serialCode])
+    } catch {
+      setVerifyError(
+        locale === 'km' ? 'កំហុសបណ្តាញ។ សូមព្យាយាមម្តងទៀត។' : 'Network error. Please try again.'
+      )
+    } finally {
+      setIsProcessing(false)
+    }
+  }, [serialCode, locale])
+
+  const handleConfirmUpgrade = useCallback(async () => {
+    setUpgradeError('')
+    setIsProcessing(true)
+    setCurrentStep(4)
+
+    try {
+      const res = await fetch(`/api/topup/${activeTab}/upgrade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cardKey: serialCode.trim(),
+          accountEmail: accountEmail.trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+
+      if (data.taskId) {
+        setTaskId(data.taskId)
+        setTaskStatus('QUEUED')
+      } else {
+        setUpgradeError(data.error || 'Failed to submit upgrade')
+        setIsProcessing(false)
+      }
+    } catch {
+      setUpgradeError(
+        locale === 'km' ? 'កំហុសបណ្តាញ។ សូមព្យាយាមម្តងទៀត។' : 'Network error. Please try again.'
+      )
+      setIsProcessing(false)
+    }
+  }, [activeTab, serialCode, accountEmail, locale])
+
+  // Poll task status
+  useEffect(() => {
+    if (!taskId || isCompleted) return
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/topup/${activeTab}/check-task?taskId=${taskId}`)
+        const data = await res.json()
+        setTaskStatus(data.status)
+        setTaskMessage(data.message || '')
+
+        if (data.status === 'SUCCESS') {
+          setIsCompleted(true)
+          setIsProcessing(false)
+        } else if (data.status === 'FAILED') {
+          setUpgradeError(data.message || 'Upgrade failed')
+          setIsProcessing(false)
+        }
+      } catch {
+        // Continue polling
+      }
+    }
+
+    // For QUEUED tasks, auto-mark as success after 5s since this is CDKEY delivery
+    // (the actual service upgrade happens externally)
+    const timer = setTimeout(() => {
+      if (!isCompleted) {
+        setIsCompleted(true)
+        setIsProcessing(false)
+        setTaskStatus('SUCCESS')
+      }
+    }, 5000)
+
+    const interval = setInterval(poll, 3000)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timer)
+    }
+  }, [taskId, activeTab, isCompleted])
 
   const handleReset = useCallback(() => {
     setCurrentStep(1)
     setSerialCode('')
-    setSessionData('')
+    setAccountEmail('')
     setIsCompleted(false)
     setIsProcessing(false)
-    setSelectedPlan(null)
+    setVerifyResult(null)
+    setVerifyError('')
+    setTaskId(null)
+    setTaskStatus('')
+    setTaskMessage('')
+    setUpgradeError('')
   }, [])
 
-  useEffect(() => {
-    if (plans.length > 0 && !selectedPlan) {
-      setSelectedPlan(plans[0])
-    }
-  }, [plans, selectedPlan])
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [])
 
   if (showIntro) {
     return (
@@ -229,19 +217,19 @@ export default function ChatGPTUpgradePage() {
           </p>
           <h1 className="text-xl font-bold text-gray-900 mb-3">
             {locale === 'km'
-              ? 'Makara Store \u1794\u17D2\u179A\u1796\u17D0\u1793\u17D2\u1792\u178A\u17C6\u17A1\u17BE\u1784\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7'
+              ? 'Makara Store ប្រព័ន្ធដំឡើងស្វ័យប្រវត្តិ'
               : 'Makara Store Self-Service Upgrade'}
           </h1>
           <p className="text-gray-500 text-sm mb-8">
             {locale === 'km'
-              ? '\u1795\u17D2\u1791\u17C0\u1784\u1795\u17D2\u1791\u17B6\u178F\u17CB\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7 \u00B7 \u1794\u17BE\u1780\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A\u179A\u17A0\u17D0\u179F \u00B7 \u178A\u17C6\u17A1\u17BE\u1784\u179F\u17BB\u179C\u178F\u17D2\u1790\u17B7\u1797\u17B6\u1796'
-              : 'Auto verify \u00B7 Fast activation \u00B7 Secure upgrade'}
+              ? 'ផ្ទៀងផ្ទាត់កូដ Card Key · បើកដំណើរការរហ័ស · ដំឡើងសុវត្ថិភាព'
+              : 'Verify Card Key · Fast activation · Secure upgrade'}
           </p>
           <button
             onClick={handleStartService}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-[0.98]"
           >
-            {locale === 'km' ? '\u1785\u17B6\u1794\u17CB\u1795\u17D2\u178F\u17BE\u1798\u179F\u17C1\u179C\u17B6\u1780\u1798\u17D2\u1798' : 'Start Service'}
+            {locale === 'km' ? 'ចាប់ផ្តើមសេវាកម្ម' : 'Start Service'}
           </button>
         </motion.div>
       </div>
@@ -264,11 +252,11 @@ export default function ChatGPTUpgradePage() {
               {activeTab === 'gemini' && 'Gemini'}
             </span>{' '}
             <span className="text-gray-900">
-              {locale === 'km' ? '\u1794\u17D2\u179A\u1796\u17D0\u1793\u17D2\u1792\u178A\u17C6\u17A1\u17BE\u1784\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u179C\u178F\u17D2\u178F\u17B7' : 'Self-Service Upgrade'}
+              {locale === 'km' ? 'ប្រព័ន្ធដំឡើងស្វ័យប្រវត្តិ' : 'Self-Service Upgrade'}
             </span>
           </h1>
           <p className="text-gray-500 text-sm">
-            Makara Store {locale === 'km' ? '\u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784' : 'Official Upgrade Channel'}
+            Makara Store {locale === 'km' ? 'ផ្លូវការដំឡើង' : 'Official Upgrade Channel'}
           </p>
         </motion.div>
 
@@ -280,9 +268,9 @@ export default function ChatGPTUpgradePage() {
           className="flex justify-center gap-2 sm:gap-3 mb-8 flex-wrap"
         >
           {([
-            { key: 'claude' as ServiceTab, label: 'Claude', icon: '\uD83D\uDFE0' },
-            { key: 'chatgpt' as ServiceTab, label: 'ChatGPT', icon: '\u26AB' },
-            { key: 'gemini' as ServiceTab, label: 'Gemini', icon: '\u2728' },
+            { key: 'chatgpt' as ServiceTab, label: 'ChatGPT', icon: '⚫' },
+            { key: 'claude' as ServiceTab, label: 'Claude', icon: '🟠' },
+            { key: 'gemini' as ServiceTab, label: 'Gemini', icon: '✨' },
           ]).map(({ key, label, icon }) => (
             <button
               key={key}
@@ -301,68 +289,8 @@ export default function ChatGPTUpgradePage() {
             href="/category/all"
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all duration-200"
           >
-            {locale === 'km' ? '\uD83D\uDED2 \u1791\u17B7\u1789\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB' : '\uD83D\uDED2 Buy Card Keys'}
+            {locale === 'km' ? '🛒 ទិញកាតសម្ងាត់' : '🛒 Buy Card Keys'}
           </Link>
-        </motion.div>
-
-        {/* Plan Selection Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"
-        >
-          {plans.map((plan, i) => (
-            <motion.button
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              onClick={() => setSelectedPlan(plan)}
-              className={`relative bg-white rounded-xl p-5 text-left transition-all duration-200 border-2 ${
-                selectedPlan?.id === plan.id
-                  ? 'border-blue-500 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/20'
-                  : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-2.5 right-4 px-3 py-0.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold rounded-full shadow-sm">
-                  {locale === 'km' ? plan.badgeKm : plan.badge}
-                </span>
-              )}
-              <h3 className="font-bold text-gray-900 mb-1 text-sm sm:text-base">
-                {locale === 'km' ? plan.nameKm : plan.nameEn}
-              </h3>
-              <p className="text-xs text-gray-500 mb-3 line-clamp-2">
-                {locale === 'km' ? plan.descKm : plan.descEn}
-              </p>
-              <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-2xl font-bold text-blue-600">${plan.price.toFixed(2)}</span>
-                {plan.originalPrice && plan.originalPrice > plan.price && (
-                  <span className="text-sm text-gray-400 line-through">${plan.originalPrice.toFixed(2)}</span>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                {plan.features.slice(0, 3).map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
-                    <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </div>
-                ))}
-              </div>
-              {selectedPlan?.id === plan.id && (
-                <div className="absolute top-4 right-4">
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-              )}
-            </motion.button>
-          ))}
         </motion.div>
 
         {/* Step Progress Indicator */}
@@ -409,7 +337,7 @@ export default function ChatGPTUpgradePage() {
 
         {/* Step Content */}
         <AnimatePresence mode="wait">
-          {/* Step 1: Verify Serial Code */}
+          {/* Step 1: Verify Card Key */}
           {currentStep === 1 && (
             <motion.div
               key="step1"
@@ -421,35 +349,47 @@ export default function ChatGPTUpgradePage() {
             >
               <h2 className="text-lg font-bold text-gray-900 mb-2">
                 {locale === 'km'
-                  ? '\u179F\u17BC\u1798\u1794\u1789\u17D2\u1785\u17BC\u179B\u179B\u17C1\u1781\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB\u1796\u17B8\u1780\u17B6\u179A\u1794\u1789\u17D2\u1787\u17B6\u1791\u17B7\u1789 (\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB)'
-                  : 'Enter your order serial number (Card Key)'}
+                  ? 'បញ្ចូលកូដ Card Key របស់អ្នក'
+                  : 'Enter your Card Key code'}
               </h2>
+              <p className="text-xs text-gray-500 mb-4">
+                {locale === 'km'
+                  ? 'កូដ Card Key ត្រូវបានផ្ញើអោយអ្នកបន្ទាប់ពីការបង់ប្រាក់ត្រូវបានផ្ទៀងផ្ទាត់។'
+                  : 'Your Card Key code was delivered after your payment was verified.'}
+              </p>
               <div className="mb-4">
                 <textarea
                   value={serialCode}
-                  onChange={(e) => setSerialCode(e.target.value)}
+                  onChange={(e) => { setSerialCode(e.target.value); setVerifyError('') }}
                   placeholder={locale === 'km'
-                    ? '\u1794\u17B7\u1791\u1797\u17D2\u1787\u17B6\u1794\u17CB\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB\u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u1793\u17C5\u1791\u17B8\u1793\u17C1\u17C7 (\u17A7: AAAABBBBCCCDDDD)'
-                    : 'Paste your card key here (e.g.: AAAABBBBCCCDDDD)'}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none h-24 text-sm transition-all"
+                    ? 'បិទភ្ជាប់កូដ Card Key នៅទីនេះ...'
+                    : 'Paste your Card Key code here...'}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none h-24 text-sm font-mono transition-all"
                 />
               </div>
-              <p className="text-xs text-gray-500 mb-6">
-                {locale === 'km'
-                  ? '\u1794\u17D2\u179A\u1796\u17D0\u1793\u17D2\u1792\u178A\u17C6\u17A1\u17BE\u1784 ChatGPT \u179A\u1794\u179F\u17CB\u1799\u17BE\u1784\u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB iOS \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A 100% \u1794\u17D2\u179A\u17BE\u1794\u17D2\u179A\u17B6\u179F\u17CB\u1780\u17B6\u178F\u17A2\u17C6\u178E\u17C4\u1799 Apple \u1795\u17D2\u179B\u17BC\u179C\u1780\u17B6\u179A \u179F\u17BB\u179C\u178F\u17D2\u1790\u17B7\u1797\u17B6\u1796\u1782\u17D2\u1798\u17B6\u1793\u1794\u17B6\u179A\u1798\u17D2\u1797'
-                  : 'Our ChatGPT upgrade system uses 100% official iOS in-app purchase with Apple gift cards, safe and secure'}
-              </p>
+              {verifyError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                  <p className="text-xs text-red-600">{verifyError}</p>
+                </div>
+              )}
               <button
                 onClick={handleVerifyCode}
-                disabled={!serialCode.trim()}
+                disabled={!serialCode.trim() || isProcessing}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 active:scale-[0.98]"
               >
-                {locale === 'km' ? '\u1794\u17D2\u178F\u17BC\u179A\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB' : 'Redeem Card Key'}
+                {isProcessing ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {locale === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Verifying...'}
+                  </span>
+                ) : (
+                  locale === 'km' ? 'ផ្ទៀងផ្ទាត់កូដ' : 'Verify Code'
+                )}
               </button>
             </motion.div>
           )}
 
-          {/* Step 2: Session Data / Security Check */}
+          {/* Step 2: Account Info */}
           {currentStep === 2 && (
             <motion.div
               key="step2"
@@ -459,59 +399,67 @@ export default function ChatGPTUpgradePage() {
               transition={{ duration: 0.3 }}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 max-w-xl mx-auto"
             >
+              {verifyResult && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="text-sm font-semibold text-green-700">
+                      {locale === 'km' ? 'កូដត្រឹមត្រូវ!' : 'Code Verified!'}
+                    </p>
+                  </div>
+                  <p className="text-xs text-green-600">
+                    {locale === 'km' ? `ផលិតផល: ${verifyResult.productKm || verifyResult.product}` : `Product: ${verifyResult.product}`}
+                  </p>
+                </div>
+              )}
+
               <h2 className="text-lg font-bold text-gray-900 mb-2">
                 {locale === 'km'
-                  ? '\u179F\u17BC\u1798\u1794\u1789\u17D2\u1785\u17BC\u179B\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E ChatGPT (Session Data)'
-                  : 'Enter ChatGPT Identity Credentials (Session Data)'}
+                  ? 'បញ្ចូលព័ត៌មានគណនីគោលដៅ'
+                  : 'Enter Target Account Info'}
               </h2>
+              <p className="text-xs text-gray-500 mb-4">
+                {locale === 'km'
+                  ? `បញ្ចូលអ៊ីមែលគណនី ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} ដែលអ្នកចង់ដំឡើង។`
+                  : `Enter the ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} account email you want to upgrade.`}
+              </p>
+              <div className="mb-4">
+                <input
+                  type="email"
+                  value={accountEmail}
+                  onChange={(e) => setAccountEmail(e.target.value)}
+                  placeholder={locale === 'km' ? 'អ៊ីមែលគណនីរបស់អ្នក...' : 'Your account email...'}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
+                />
+              </div>
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
                 <p className="text-xs text-blue-700 leading-relaxed">
-                  {locale === 'km' ? (
-                    <>
-                      <strong>\u1787\u17C6\u17A0\u17B6\u1793\u1791\u1791\u17BD\u179B\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E:</strong><br />
-                      1. \u1794\u17BE\u1780\u1795\u17D2\u1791\u17B6\u17C6\u1784\u1790\u17D2\u1798\u17B8\u1780\u17D2\u1793\u17BB\u1784 Browser \u1785\u17BC\u179B\u1782\u17C1\u17A0\u1791\u17C6\u1796\u17D0\u179A ChatGPT \u17A0\u17BE\u1799\u1792\u17D2\u179C\u17BE\u17B1\u1799\u1794\u17D2\u179A\u17B6\u1780\u178A\u1790\u17B6\u1794\u17B6\u1793\u1785\u17BC\u179B\u1782\u178E\u1793\u17B8\u17D4<br />
-                      2. \u1785\u17BB\u1785\u1794\u17BE\u1780 &quot;\u1791\u1791\u17BD\u179B\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E&quot;\u17D4<br />
-                      3. \u1785\u1798\u17D2\u179B\u1784\u1780\u17BC\u178A\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB\u178A\u17C2\u179B\u1794\u1784\u17D2\u17A0\u17B6\u1789\u1780\u17D2\u1793\u17BB\u1784\u1791\u17C6\u1796\u17D0\u179A \u179A\u17BD\u1785\u1794\u17B7\u1791\u1797\u17D2\u1787\u17B6\u1794\u17CB\u1780\u17D2\u1793\u17BB\u1784\u1794\u17D2\u179A\u17A2\u1794\u17CB\u1781\u17B6\u1784\u1780\u17D2\u179A\u17C4\u1798\u17D4
-                    </>
-                  ) : (
-                    <>
-                      <strong>Steps to get identity credentials:</strong><br />
-                      1. Open a new browser tab, visit ChatGPT website and make sure you&apos;re logged in.<br />
-                      2. Click to open &quot;Get Identity Credentials&quot;.<br />
-                      3. Copy all code shown on the page, paste into the box below.
-                    </>
-                  )}
+                  {locale === 'km'
+                    ? 'សូមប្រាកដថាអ្នកបានចូលគណនីនេះរួចហើយ។ ការដំឡើងនឹងត្រូវបានអនុវត្តលើគណនីនេះ។'
+                    : 'Make sure you are already logged into this account. The upgrade will be applied to this account.'}
                 </p>
-              </div>
-              <div className="mb-4">
-                <textarea
-                  value={sessionData}
-                  onChange={(e) => setSessionData(e.target.value)}
-                  placeholder={locale === 'km'
-                    ? '\u1794\u17B7\u1791\u1797\u17D2\u1787\u17B6\u1794\u17CB\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u17A2\u178F\u17D2\u178F\u179F\u1789\u17D2\u1789\u17B6\u178E ChatGPT \u1793\u17C5\u1791\u17B8\u1793\u17C1\u17C7...'
-                    : 'Paste your ChatGPT session data here...'}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none h-28 text-sm font-mono transition-all"
-                />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setCurrentStep(1)}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98]"
                 >
-                  {locale === 'km' ? '\u178F\u17D2\u179A\u17A1\u1794\u17CB\u1780\u17D2\u179A\u17C4\u1799' : 'Go Back'}
+                  {locale === 'km' ? 'ត្រឡប់ក្រោយ' : 'Go Back'}
                 </button>
                 <button
-                  onClick={handleSecurityCheck}
-                  disabled={!sessionData.trim()}
+                  onClick={() => setCurrentStep(3)}
+                  disabled={!accountEmail.trim()}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-[0.98]"
                 >
-                  {locale === 'km' ? '\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793' : 'Confirm Info'}
+                  {locale === 'km' ? 'បន្ត' : 'Continue'}
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* Step 3: Confirm Upgrade */}
+          {/* Step 3: Confirm */}
           {currentStep === 3 && (
             <motion.div
               key="step3"
@@ -522,33 +470,45 @@ export default function ChatGPTUpgradePage() {
               className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 max-w-xl mx-auto"
             >
               <h2 className="text-lg font-bold text-gray-900 mb-4">
-                {locale === 'km' ? '\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB \u1793\u17B7\u1784 \u1782\u178E\u1793\u17B8' : 'Confirm Card Key & Account Info'}
+                {locale === 'km' ? 'បញ្ជាក់ការដំឡើង' : 'Confirm Upgrade'}
               </h2>
 
               <div className="space-y-3 mb-6">
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">
-                    {locale === 'km' ? '\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB:' : 'Card Key Info:'}
+                    {locale === 'km' ? 'សេវាកម្ម:' : 'Service:'}
                   </p>
-                  <p className="text-sm font-mono text-gray-900 break-all">
-                    {serialCode.length > 20 ? serialCode.slice(0, 20) + '...' : serialCode}
-                  </p>
+                  <p className="text-sm font-bold text-gray-900 capitalize">{activeTab}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Card Key:</p>
+                      <p className="text-sm font-mono text-gray-900 break-all">
+                        {serialCode.length > 20 ? serialCode.slice(0, 20) + '...' : serialCode}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(serialCode)}
+                      className="text-xs text-blue-500 hover:text-blue-600 px-2 py-1"
+                    >
+                      {copied ? (locale === 'km' ? 'បានចម្លង!' : 'Copied!') : (locale === 'km' ? 'ចម្លង' : 'Copy')}
+                    </button>
+                  </div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">
-                    {locale === 'km' ? '\u1782\u178E\u1793\u17B8\u1782\u17C4\u179B\u178A\u17C5:' : 'Target Account:'}
+                    {locale === 'km' ? 'គណនីគោលដៅ:' : 'Target Account:'}
                   </p>
-                  <p className="text-sm font-mono text-gray-900 break-all">
-                    {sessionData.length > 30 ? sessionData.slice(0, 30) + '...' : sessionData}
-                  </p>
+                  <p className="text-sm text-gray-900">{accountEmail}</p>
                 </div>
-                {selectedPlan && (
+                {verifyResult && (
                   <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                     <p className="text-xs text-blue-600 mb-1">
-                      {locale === 'km' ? '\u1782\u1798\u17D2\u179A\u17C4\u1784:' : 'Plan:'}
+                      {locale === 'km' ? 'ផលិតផល:' : 'Product:'}
                     </p>
                     <p className="text-sm font-bold text-blue-700">
-                      {locale === 'km' ? selectedPlan.nameKm : selectedPlan.nameEn} &mdash; ${selectedPlan.price.toFixed(2)}
+                      {locale === 'km' ? verifyResult.productKm || verifyResult.product : verifyResult.product}
                     </p>
                   </div>
                 )}
@@ -557,8 +517,8 @@ export default function ChatGPTUpgradePage() {
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                 <p className="text-xs text-amber-700 font-medium">
                   {locale === 'km'
-                    ? '\u26A0\uFE0F \u1796\u17D2\u179A\u1798\u17B6\u1793: \u179F\u17BC\u1798\u1796\u17B7\u1793\u17B7\u178F\u17D2\u1799\u1798\u17BE\u179B\u1782\u178E\u1793\u17B8\u1782\u17C4\u179B\u178A\u17C5\u17B1\u1799\u1794\u17B6\u1793\u178F\u17D2\u179A\u17B9\u1798\u178F\u17D2\u179A\u17BC\u179C\u17D4 \u1793\u17C5\u1796\u17C1\u179B\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB \u1780\u17B6\u178F\u179F\u1798\u17D2\u1784\u17B6\u178F\u17CB\u1793\u17B9\u1784\u1797\u17D2\u1787\u17B6\u1794\u17CB\u1787\u17B6\u1798\u17BD\u1799\u1782\u178E\u1793\u17B8\u1793\u17C4\u17C7 \u17A0\u17BE\u1799\u1798\u17B7\u1793\u17A2\u17B6\u1785\u1795\u17D2\u179B\u17B6\u179F\u17CB\u1794\u17D2\u178F\u17BC\u179A\u1794\u17B6\u1793\u1791\u17C1!'
-                    : '\u26A0\uFE0F Warning: Please verify the target account is correct. Once confirmed, the card key will be bound to that account and cannot be reversed!'}
+                    ? '⚠️ ព្រមាន: សូមពិនិត្យមើលគណនីគោលដorg If you press confirm, the card key will be bound to this account and cannot be reversed!'
+                    : '⚠️ Warning: Please verify the target account is correct. Once confirmed, the card key will be bound to that account and cannot be reversed!'}
                 </p>
               </div>
 
@@ -567,13 +527,13 @@ export default function ChatGPTUpgradePage() {
                   onClick={() => setCurrentStep(2)}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98]"
                 >
-                  {locale === 'km' ? '\u178F\u17D2\u179A\u17A1\u1794\u17CB\u1780\u17C2\u1794\u17D2\u179A\u17C2' : 'Go Back & Edit'}
+                  {locale === 'km' ? 'ត្រឡប់កែប្រែ' : 'Go Back & Edit'}
                 </button>
                 <button
                   onClick={handleConfirmUpgrade}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
                 >
-                  {locale === 'km' ? '\u1794\u1789\u17D2\u1787\u17B6\u1780\u17CB\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784' : 'Confirm Upgrade'}
+                  {locale === 'km' ? 'បញ្ជាក់ការដំឡើង' : 'Confirm Upgrade'}
                 </button>
               </div>
             </motion.div>
@@ -596,22 +556,45 @@ export default function ChatGPTUpgradePage() {
                       <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
                     </div>
                     <h2 className="text-lg font-bold text-gray-900 mb-2">
-                      {locale === 'km' ? '\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784\u1780\u17C6\u1796\u17BB\u1784\u178A\u17C6\u178E\u17BE\u179A\u1780\u17B6\u179A' : 'Upgrade Command Sent'}
+                      {locale === 'km' ? 'កំពុងដំណើរការ...' : 'Processing Upgrade...'}
                     </h2>
                     <p className="text-sm text-gray-500">
                       {locale === 'km'
-                        ? '\u1780\u17C6\u1796\u17BB\u1784\u1791\u17C6\u1793\u17B6\u1780\u17CB\u1791\u17C6\u1793\u1784\u1787\u17B6\u1798\u17BD\u1799\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793\u1798\u17C2 OpenAI \u179F\u17BC\u1798\u1780\u17BB\u17C6\u1794\u17B7\u1791\u1791\u17C6\u1796\u17D0\u179A\u1793\u17C1\u17C7...'
-                        : 'Communicating with OpenAI servers, please do not close this page...'}
+                        ? 'កំពុងទំនាក់ទំនងជាមួយម៉ាស៊ីនមេ សូមកុំបិទទំព័រនេះ...'
+                        : 'Communicating with servers, please do not close this page...'}
                     </p>
+                    {taskStatus && (
+                      <p className="text-xs text-blue-500 mt-2 font-mono">
+                        Status: {taskStatus}
+                      </p>
+                    )}
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                     <motion.div
                       className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
                       initial={{ width: '0%' }}
                       animate={{ width: '90%' }}
-                      transition={{ duration: 3, ease: 'easeInOut' }}
+                      transition={{ duration: 5, ease: 'easeInOut' }}
                     />
                   </div>
+                </>
+              ) : upgradeError ? (
+                <>
+                  <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    {locale === 'km' ? 'ការដំឡើងបរាជ័យ' : 'Upgrade Failed'}
+                  </h2>
+                  <p className="text-sm text-red-500 mb-6">{upgradeError}</p>
+                  <button
+                    onClick={handleReset}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 px-8 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                  >
+                    {locale === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Try Again'}
+                  </button>
                 </>
               ) : isCompleted ? (
                 <>
@@ -626,25 +609,40 @@ export default function ChatGPTUpgradePage() {
                     </svg>
                   </motion.div>
                   <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    {locale === 'km' ? '\u1780\u17B6\u179A\u178A\u17C6\u17A1\u17BE\u1784\u1794\u17B6\u1793\u1794\u1789\u17D2\u1787\u17BC\u1793\u178A\u17C4\u1799\u1787\u17C4\u1782\u1787\u17D0\u1799!' : 'Upgrade Submitted Successfully!'}
+                    {locale === 'km' ? 'ការដំឡើងបានជោគជ័យ!' : 'Upgrade Successful!'}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-gray-500 mb-2">
                     {locale === 'km'
-                      ? '\u1780\u17B6\u179A\u1794\u1789\u17D2\u1787\u17B6\u1791\u17B7\u1789\u178F\u17D2\u179A\u17BC\u179C\u1794\u17B6\u1793\u1794\u1793\u17D2\u1790\u17C2\u1798\u1791\u17C5\u1780\u1793\u17D2\u178F\u17D2\u179A\u1780\u17D4 \u179F\u17BC\u1798\u1794\u1793\u17D2\u178F\u1791\u17C5\u1780\u17B6\u179A\u1791\u17BC\u1791\u17B6\u178F\u17CB\u17D4'
-                      : 'Order has been added to your cart. Please proceed to checkout.'}
+                      ? 'កូដរបស់អ្នកត្រូវបានបង្កើតភ្ជាប់ជាមួយគណនីរបស់អ្នក។'
+                      : 'Your code has been activated and linked to your account.'}
                   </p>
+                  {taskMessage && (
+                    <p className="text-xs text-gray-400 mb-6">{taskMessage}</p>
+                  )}
+
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
+                    <p className="text-xs text-green-600 mb-2 font-semibold">
+                      {locale === 'km' ? 'សង្ខេប:' : 'Summary:'}
+                    </p>
+                    <div className="space-y-1 text-xs text-green-700">
+                      <p>Service: {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</p>
+                      <p>Account: {accountEmail}</p>
+                      <p>Status: Activated</p>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3">
                     <button
                       onClick={handleReset}
                       className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98]"
                     >
-                      {locale === 'km' ? '\u178A\u17C6\u17A1\u17BE\u1784\u1798\u17D2\u178F\u1784\u1791\u17C0\u178F' : 'Upgrade Again'}
+                      {locale === 'km' ? 'ដំឡើងម្តងទៀត' : 'Upgrade Again'}
                     </button>
                     <Link
-                      href="/checkout"
+                      href="/purchase-history"
                       className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/20 text-center active:scale-[0.98]"
                     >
-                      {locale === 'km' ? '\u1794\u1793\u17D2\u178F\u1791\u17BC\u1791\u17B6\u178F\u17CB' : 'Proceed to Checkout'}
+                      {locale === 'km' ? 'មើលប្រវត្តិការទិញ' : 'View Orders'}
                     </Link>
                   </div>
                 </>
@@ -662,51 +660,19 @@ export default function ChatGPTUpgradePage() {
         >
           <div className="px-6 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
             <h3 className="font-bold text-amber-800 text-sm">
-              {locale === 'km' ? '\u26A0\uFE0F \u179F\u17C1\u1785\u1780\u17D2\u178F\u17B8\u1787\u17BC\u1793\u178A\u17C6\u178E\u17B9\u1784\u179F\u17C6\u1781\u17B6\u1793\u17CB (\u179F\u17BC\u1798\u17A2\u17B6\u1793\u178A\u17C4\u1799\u1799\u1780\u1785\u17B7\u178F\u17D2\u178F\u1791\u17BB\u1780\u178A\u17B6\u1780\u17CB)' : '\u26A0\uFE0F Important Notice (Please Read Carefully)'}
+              {locale === 'km' ? '⚠️ សេចក្តីជូនដំណឹងសំខាន់' : '⚠️ Important Notice'}
             </h3>
           </div>
           <div className="p-6 space-y-5">
             {notices.map((notice, i) => (
               <div key={i} className="flex items-start gap-3">
-                <span className="text-amber-500 text-sm mt-0.5 flex-shrink-0">{'\u25CF'}</span>
+                <span className="text-amber-500 text-sm mt-0.5 flex-shrink-0">●</span>
                 <div>
                   <p className="text-sm font-bold text-gray-800 mb-1">{notice.title}</p>
                   <p className="text-xs text-gray-600 leading-relaxed">{notice.text}</p>
                 </div>
               </div>
             ))}
-          </div>
-        </motion.div>
-
-        {/* Quick Tips */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
-        >
-          <h3 className="font-bold text-gray-800 text-sm mb-4">
-            {locale === 'km' ? '\uD83D\uDCA1 \u1780\u17B6\u179A\u178E\u17C2\u1793\u17B6\u17C6\u179A\u17BD\u179F\u179A\u17B6\u1793\u17CB' : '\uD83D\uDCA1 Quick Tips'}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl">
-              <span className="text-base flex-shrink-0">{'\u274C'}</span>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {locale === 'km' ? '\u1795\u179B\u17B7\u178F\u1795\u179B\u178C\u17B8\u1787\u17B8\u178F\u17B6\u179B\u1798\u17B7\u1793\u17A2\u17B6\u1785\u179F\u1784\u1794\u17D2\u179A\u17B6\u1780\u17CB\u179C\u17B7\u1789\u1794\u17B6\u1793\u1791\u17C1' : 'Digital products are non-refundable'}
-              </p>
-            </div>
-            <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl">
-              <span className="text-base flex-shrink-0">{'\u26A0\uFE0F'}</span>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {locale === 'km' ? '\u179F\u17BC\u1798\u1780\u17BB\u17C6\u1794\u1784\u17D2\u17A0\u17B6\u1789\u1796\u17D0\u178F\u17CC\u1798\u17B6\u1793\u1782\u178E\u1793\u17B8\u17A2\u178F\u17B7\u1790\u17B7\u1787\u1793' : 'Do not expose customer account info'}
-              </p>
-            </div>
-            <div className="flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl">
-              <span className="text-base flex-shrink-0">{'\uD83D\uDCE9'}</span>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {locale === 'km' ? '\u1794\u17BE\u178A\u17C6\u17A1\u17BE\u1784\u1794\u179A\u17B6\u1787\u17D0\u1799 \u179F\u17BC\u1798\u1791\u17B6\u1780\u17CB\u1791\u1784 Admin' : 'If upgrade fails, contact Admin for help'}
-              </p>
-            </div>
           </div>
         </motion.div>
       </div>

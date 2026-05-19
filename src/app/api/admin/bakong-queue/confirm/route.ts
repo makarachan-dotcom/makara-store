@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions, isAdminUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendTelegramNotification, formatNewOrderNotification } from '@/lib/telegram'
+import { sendDeliveryEmail, sendPaymentVerifiedEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
       })
 
       // Auto-deliver card keys for AUTO delivery products
+      const allDeliveredKeys: string[] = []
+      let deliveryProductName = ''
       for (const item of receipt.order.items) {
         if (item.product.deliveryType === 'AUTO') {
           const keys = await prisma.cardKey.findMany({
@@ -55,6 +58,8 @@ export async function POST(request: NextRequest) {
           if (keys.length > 0) {
             const keyIds = keys.map((k) => k.id)
             const keyCodes = keys.map((k) => k.keyCode)
+            allDeliveredKeys.push(...keyCodes)
+            deliveryProductName = item.product.nameEn
 
             await prisma.cardKey.updateMany({
               where: { id: { in: keyIds } },
@@ -69,7 +74,53 @@ export async function POST(request: NextRequest) {
                 status: 'COMPLETED',
               },
             })
+
+            // Log the delivery
+            await prisma.deliveryLog.create({
+              data: {
+                orderId: receipt.orderId,
+                orderNumber: receipt.order.orderNumber,
+                productName: item.product.nameEn,
+                deliveryType: 'CARD_KEY',
+                deliveredItem: keyCodes.join(', '),
+                status: 'SUCCESS',
+              },
+            })
+          } else {
+            await prisma.deliveryLog.create({
+              data: {
+                orderId: receipt.orderId,
+                orderNumber: receipt.order.orderNumber,
+                productName: item.product.nameEn,
+                deliveryType: 'CARD_KEY',
+                deliveredItem: '',
+                status: 'FAILED',
+                errorMessage: 'No available card keys in stock',
+              },
+            })
           }
+        }
+      }
+
+      // Send email notifications
+      const orderUser = await prisma.user.findUnique({ where: { id: receipt.order.userId } })
+      if (orderUser?.email) {
+        try {
+          if (allDeliveredKeys.length > 0) {
+            await sendDeliveryEmail(orderUser.email, {
+              orderNumber: receipt.order.orderNumber,
+              productName: deliveryProductName,
+              deliveredKeys: allDeliveredKeys,
+              deliveryType: 'CARD_KEY',
+            })
+          } else {
+            await sendPaymentVerifiedEmail(orderUser.email, {
+              orderNumber: receipt.order.orderNumber,
+              totalAmount: receipt.order.totalAmount,
+            })
+          }
+        } catch (emailError) {
+          console.error('Email notification failed:', emailError)
         }
       }
 

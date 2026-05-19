@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import HeroBanner from '@/components/home/HeroBanner'
 import ProductCard from '@/components/home/ProductCard'
 import PaymentBanner from '@/components/home/PaymentBanner'
+import OrderLookup from '@/components/home/OrderLookup'
 import { useTranslation } from '@/hooks/useTranslation'
 import { getProductImage } from '@/lib/product-images'
 
@@ -175,6 +176,9 @@ export default function HomePage() {
 
         {/* ការបង់ប្រាក់ដែលទទួលយក */}
         <PaymentBanner />
+
+        {/* Check Order */}
+        <OrderLookup locale={locale} />
 
         {/* ផ្នែក ChatGPT Upgrade */}
         <section className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-r from-obsidian-50 to-obsidian-100 p-8">

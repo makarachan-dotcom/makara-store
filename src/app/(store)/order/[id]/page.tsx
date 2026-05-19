@@ -208,12 +208,20 @@ export default function OrderTrackingPage() {
         {order.cardKey && order.status === 'COMPLETED' && (
           <div className="card-gaming p-6 mb-6 border border-green-500/20">
             <h3 className="text-green-400 font-semibold text-sm mb-3">
-              {locale === 'km' ? '\u1780\u17BC\u1793\u179F\u17C4 Card Key \u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780' : 'Your Card Key'}
+              {locale === 'km' ? 'កូនសោ Card Key របស់អ្នក' : 'Your Card Key'}
             </h3>
             <div className="bg-green-500/5 rounded-lg p-4 text-center">
               <p className="text-green-400 font-mono text-lg tracking-widest select-all">{order.cardKey}</p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(order.cardKey || '')
+                }}
+                className="mt-3 px-4 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs rounded-lg border border-green-500/20 transition-colors"
+              >
+                {locale === 'km' ? 'ចម្លងកូនសោ' : 'Copy Key'}
+              </button>
               <p className="text-white/30 text-xs mt-2">
-                {locale === 'km' ? '\u1785\u17C6\u179B\u1784\u179B\u17BE\u1780\u17BC\u1793\u179F\u17C4\u1793\u17C1\u17C7\u178A\u17BE\u1798\u17D2\u1794\u17B8\u1794\u17D2\u179A\u17BE' : 'Copy this key to use for your top-up'}
+                {locale === 'km' ? 'ប្រើកូនសោនេះនៅ Self-Service Portal ដើម្បីដំឡើងផលិតផល' : 'Use this key at the Self-Service Portal to activate your product'}
               </p>
             </div>
           </div>
@@ -225,8 +233,8 @@ export default function OrderTrackingPage() {
             {locale === 'km' ? '\u178F\u17D2\u179A\u17A1\u1794\u17CB\u1791\u17C5\u1791\u17C6\u1796\u17D0\u179A\u178A\u17BE\u1798' : 'Back to Home'}
           </Link>
           {order.cardKey && order.status === 'COMPLETED' && (
-            <Link href="/topup" className="flex-1 btn-gold text-sm text-center py-3">
-              {locale === 'km' ? '\u1794\u17D2\u179A\u17BE Card Key' : 'Use Card Key'}
+            <Link href="/chatgpt-upgrade" className="flex-1 btn-gold text-sm text-center py-3">
+              {locale === 'km' ? 'ប្រើ Card Key' : 'Use Card Key'}
             </Link>
           )}
         </div>

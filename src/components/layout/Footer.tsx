@@ -53,7 +53,7 @@ export default function Footer() {
               {[
                 { href: '/instructions', label: t('instructions') },
                 { href: '/privacy-policy', label: t('privacyPolicy') },
-                { href: '/api-key', label: t('apiKey') },
+                { href: '/purchase-history', label: t('orderHistory') },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-white/40 hover:text-neon text-sm transition-colors font-khmer">
