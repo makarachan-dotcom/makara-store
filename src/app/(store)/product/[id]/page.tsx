@@ -50,7 +50,7 @@ function generateVariants(product: ProductData): ProductVariant[] {
   if (n.includes('claude')) {
     return [
       { label: 'Pro Monthly (Direct)', labelKm: 'Pro \u1794\u17d2\u179a\u1785\u17b6\u17c6\u1781\u17c2 (\u1795\u17d2\u1791\u17b6\u179b\u17cb)', price: product.price, inStock: product.stockStatus === 'IN_STOCK' },
-      { label: 'Pro Monthly (Account)', labelKm: 'Pro \u1794\u17d2\u179a\u1785\u17b6\u17c6\u1781\u17c2 (\u1782\u178e\u178e\u17b8)', price: product.price * 0.95, inStock: product.stockStatus !== 'OUT_OF_STOCK' },
+      { label: 'Pro Monthly (Account)', labelKm: 'Pro \u1794\u17d2\u179a\u1785\u17b6\u17c6\u1781\u17c2 (\u1782\u178e\u1793\u17b8)', price: product.price * 0.95, inStock: product.stockStatus !== 'OUT_OF_STOCK' },
     ]
   }
   if (n.includes('gemini')) {
@@ -256,7 +256,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             {/* Login prompt */}
             {!session && (
               <p className="text-white/40 text-xs font-khmer text-center">
-                {locale === 'km' ? '\u179f\u17bc\u1798\u1785\u17bc\u179b\u1782\u178e\u178e\u17b8\u1798\u17bb\u1793\u1796\u17c1\u179b\u1791\u17b7\u1789\u1795\u179b\u17b7\u178f\u1795\u179b' : 'Please log in before purchasing products'}
+                {locale === 'km' ? '\u179f\u17bc\u1798\u1785\u17bc\u179b\u1782\u178e\u1793\u17b8\u1798\u17bb\u1793\u1796\u17c1\u179b\u1791\u17b7\u1789\u1795\u179b\u17b7\u178f\u1795\u179b' : 'Please log in before purchasing products'}
               </p>
             )}
 
@@ -268,7 +268,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               </h3>
               <div className="bg-white/[0.03] rounded-lg p-3 mb-3 border border-white/5">
                 <p className="text-white/70 text-sm font-medium mb-0.5">{locale === 'km' ? '\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u178a\u17b9\u1780\u1787\u1789\u17d2\u1787\u17bc\u1793' : 'Delivery Information'}</p>
-                <p className="text-white/40 text-xs">{locale === 'km' ? '\u1794\u1793\u17d2\u1791\u17b6\u1794\u17cb\u1796\u17b8\u1794\u1789\u17d2\u1787\u17b6\u1791\u17b7\u1789 \u17a2\u17d2\u1793\u1780\u1793\u17b9\u1784\u1791\u1791\u17bd\u179b\u1794\u17b6\u1793\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1782\u178e\u178e\u17b8 \u17ac\u1780\u17bc\u178a\u1795\u179b\u17b7\u178f\u1795\u179b' : 'After ordering, you will receive account info or product code'}</p>
+                <p className="text-white/40 text-xs">{locale === 'km' ? '\u1794\u1793\u17d2\u1791\u17b6\u1794\u17cb\u1796\u17b8\u1794\u1789\u17d2\u1787\u17b6\u1791\u17b7\u1789 \u17a2\u17d2\u1793\u1780\u1793\u17b9\u1784\u1791\u1791\u17bd\u179b\u1794\u17b6\u1793\u1796\u17d0\u178f\u17cc\u1798\u17b6\u1793\u1782\u178e\u1793\u17b8 \u17ac\u1780\u17bc\u178a\u1795\u179b\u17b7\u178f\u1795\u179b' : 'After ordering, you will receive account info or product code'}</p>
               </div>
               <div className="space-y-2.5">
                 {[

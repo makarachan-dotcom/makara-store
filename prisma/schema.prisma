@@ -125,6 +125,7 @@ model Product {
   orderItems      OrderItem[]
   favorites       Favorite[]
   cardKeys        CardKey[]
+  accountInventory AccountInventory[]
 
   @@map("products")
 }
@@ -401,6 +402,40 @@ model InstructionVideo {
   updatedAt    DateTime @updatedAt
 
   @@map("instruction_videos")
+}
+
+// ===== Account Inventory (Mode B Auto-Delivery) =====
+
+model AccountInventory {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String    @db.ObjectId
+  email       String
+  password    String
+  extraInfo   String?
+  isSold      Boolean   @default(false)
+  orderId     String?   @db.ObjectId
+  createdAt   DateTime  @default(now())
+  soldAt      DateTime?
+
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@map("account_inventory")
+}
+
+// ===== Delivery Log =====
+
+model DeliveryLog {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  orderId       String    @db.ObjectId
+  orderNumber   String
+  productName   String
+  deliveryType  String
+  deliveredItem String
+  status        String    @default("SUCCESS")
+  errorMessage  String?
+  createdAt     DateTime  @default(now())
+
+  @@map("delivery_logs")
 }
 
 // ===== ផ្នែកកំណត់ហេតុ Scraper =====

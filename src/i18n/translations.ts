@@ -74,8 +74,8 @@ export const translations = {
     maintenanceDesc: 'យើងកំពុងធ្វើបច្ចុប្បន្នភាពគេហទំព័រ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។',
     
     // Intro
-    introText: 'Made with Unreal Engine 5',
-    introBy: 'By Makara Store',
+    introText: 'Welcome to Makara Store',
+    introBy: 'Premium Digital Store',
     
     // AI Chat
     aiChatTitle: 'ជំនួយការ AI',
@@ -169,8 +169,8 @@ export const translations = {
     maintenanceTitle: 'Website Updating',
     maintenanceDesc: 'We are currently updating our website. Please try again later.',
     
-    introText: 'Made with Unreal Engine 5',
-    introBy: 'By Makara Store',
+    introText: 'Welcome to Makara Store',
+    introBy: 'Premium Digital Store',
     
     aiChatTitle: 'AI Assistant',
     aiChatPlaceholder: 'Type a message...',

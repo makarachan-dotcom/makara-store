@@ -279,4 +279,86 @@ export async function sendWelcomeEmail(to: string, userName: string) {
   })
 }
 
+export async function sendDeliveryEmail(to: string, data: {
+  orderNumber: string
+  productName: string
+  deliveredKeys: string[]
+  deliveryType: 'CARD_KEY' | 'ACCOUNT'
+}) {
+  const keyBlocks = data.deliveredKeys.map((key) =>
+    `<div style="background: #0B0F19; border-radius: 8px; padding: 16px; margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; color: #00E5FF; text-align: center; letter-spacing: 2px; border: 1px solid rgba(0,229,255,0.2);">
+      ${key}
+    </div>`
+  ).join('')
+
+  const html = buildEmailTemplate({
+    to,
+    subject: `${STORE_NAME} - Delivery Complete: Order #${data.orderNumber}`,
+    preheader: `Your order #${data.orderNumber} has been delivered!`,
+    heading: 'Delivery Complete!',
+    body: `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="width: 60px; height: 60px; margin: 0 auto 16px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <span style="font-size: 30px; line-height: 60px;">&#10003;</span>
+        </div>
+      </div>
+      <p style="margin: 0 0 8px; font-size: 14px; color: #4a4a5a;">Order: <strong>#${data.orderNumber}</strong></p>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #4a4a5a;">Product: <strong>${data.productName}</strong></p>
+      <p style="margin: 0 0 12px; font-size: 13px; font-weight: 700; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px;">
+        ${data.deliveryType === 'CARD_KEY' ? 'Your Card Key(s):' : 'Your Account Credentials:'}
+      </p>
+      ${keyBlocks}
+      <div style="background: #FFF3CD; border-radius: 8px; padding: 14px 16px; margin-top: 16px; font-size: 12px; color: #856404;">
+        <strong>Important:</strong> Keep this information secure. Do not share your ${data.deliveryType === 'CARD_KEY' ? 'card key' : 'credentials'} with anyone.
+        ${data.deliveryType === 'CARD_KEY' ? ' Use the Self-Service Portal to activate your product.' : ''}
+      </div>
+    `,
+    ctaText: data.deliveryType === 'CARD_KEY' ? 'Go to Self-Service Portal' : 'View Order',
+    ctaUrl: data.deliveryType === 'CARD_KEY'
+      ? `${process.env.NEXTAUTH_URL || 'https://makarastore.com'}/chatgpt-upgrade`
+      : `${process.env.NEXTAUTH_URL || 'https://makarastore.com'}/purchase-history`,
+    footerNote: 'Thank you for shopping with Makara Store!',
+  })
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject: `${STORE_NAME} - Delivery Complete: Order #${data.orderNumber}`,
+    html,
+  })
+}
+
+export async function sendPaymentVerifiedEmail(to: string, data: {
+  orderNumber: string
+  totalAmount: number
+}) {
+  const html = buildEmailTemplate({
+    to,
+    subject: `${STORE_NAME} - Payment Verified: Order #${data.orderNumber}`,
+    preheader: `Payment for order #${data.orderNumber} has been verified`,
+    heading: 'Payment Verified!',
+    body: `
+      <p style="margin: 0 0 16px; font-size: 14px; color: #4a4a5a;">
+        ការបង់ប្រាក់របស់អ្នកសម្រាប់ Order <strong>#${data.orderNumber}</strong> ត្រូវបានផ្ទៀងផ្ទាត់ដោយជោគជ័យ។
+      </p>
+      <div style="background: #f0fdf4; border-radius: 8px; padding: 16px; border: 1px solid #86efac;">
+        <p style="margin: 0; font-size: 13px; color: #166534;">
+          <strong>Amount:</strong> $${data.totalAmount.toFixed(2)}<br/>
+          <strong>Status:</strong> Payment Verified - Delivery in progress
+        </p>
+      </div>
+    `,
+    ctaText: 'View Order',
+    ctaUrl: `${process.env.NEXTAUTH_URL || 'https://makarastore.com'}/purchase-history`,
+    footerNote: 'Your product will be delivered shortly.',
+  })
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject: `${STORE_NAME} - Payment Verified: Order #${data.orderNumber}`,
+    html,
+  })
+}
+
 export { buildEmailTemplate }
