@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
         {
           currency: currency === 'KHR' ? khqrData.currency.khr : khqrData.currency.usd,
           amount: currency === 'KHR' ? Math.round(Number(amount)) : parseFloat(Number(amount).toFixed(2)),
-          billNumber: order.orderNumber || orderId,
-          purposeOfTransaction: description || `Order ${order.orderNumber}`,
+          billNumber: (order.orderNumber || orderId).slice(0, 25),
+          purposeOfTransaction: (description || `Order ${order.orderNumber}`).slice(0, 25),
           expirationTimestamp,
         }
       )
