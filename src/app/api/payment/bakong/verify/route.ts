@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handlePaymentVerified } from '@/lib/delivery'
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,15 +47,14 @@ export async function POST(request: NextRequest) {
         if (res.ok) {
           const data = await res.json()
           if (data.responseCode === 0 && data.data) {
-            await prisma.order.update({
-              where: { id: order.id },
-              data: { status: 'PAYMENT_VERIFIED' },
-            })
+            const deliveryResult = await handlePaymentVerified(order, 'BAKONG_KHQR')
             return NextResponse.json({
               status: 'success',
               transactionHash: data.data.hash || '',
               amount: order.totalAmount,
               paidAt: new Date().toISOString(),
+              delivered: deliveryResult.delivered,
+              deliveredKeys: deliveryResult.deliveredKeys,
             })
           }
         }
