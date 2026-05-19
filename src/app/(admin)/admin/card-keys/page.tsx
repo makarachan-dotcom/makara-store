@@ -22,9 +22,17 @@ interface StockSummary {
   total: number
 }
 
+interface ProductOption {
+  id: string
+  nameEn: string
+  nameKm: string
+  deliveryType: string
+}
+
 export default function CardKeysPage() {
   const [keys, setKeys] = useState<CardKeyItem[]>([])
   const [stockSummary, setStockSummary] = useState<StockSummary[]>([])
+  const [allProducts, setAllProducts] = useState<ProductOption[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'available' | 'sold'>('all')
   const [showImport, setShowImport] = useState(false)
@@ -41,6 +49,7 @@ export default function CardKeysPage() {
       const data = await res.json()
       setKeys(data.keys || [])
       setStockSummary(data.stockSummary || [])
+      setAllProducts(data.allProducts || [])
     } catch {
       // Error
     } finally {
@@ -66,7 +75,7 @@ export default function CardKeysPage() {
       const res = await fetch('/api/admin/card-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: importProductId, keys: keysArray }),
+        body: JSON.stringify({ productId: importProductId, keys: keysArray, keysText: importKeys }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -130,26 +139,16 @@ export default function CardKeysPage() {
           <div className="space-y-3">
             <div>
               <label className="text-white/40 text-xs block mb-1">{'ជ្រើសរើសផលិតផល'}</label>
-              {stockSummary.length > 0 ? (
-                <select
-                  value={importProductId}
-                  onChange={e => setImportProductId(e.target.value)}
-                  className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-neon/50 focus:outline-none"
-                >
-                  <option value="">{'-- ជ្រើសរើសផលិតផល --'}</option>
-                  {stockSummary.map(p => (
-                    <option key={p.productId} value={p.productId}>{p.productName}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="text"
-                  value={importProductId}
-                  onChange={e => setImportProductId(e.target.value)}
-                  placeholder="Product ID"
-                  className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/20 focus:border-neon/50 focus:outline-none"
-                />
-              )}
+              <select
+                value={importProductId}
+                onChange={e => setImportProductId(e.target.value)}
+                className="w-full bg-obsidian border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-neon/50 focus:outline-none"
+              >
+                <option value="">{'-- ជ្រើសរើសផលិតផល --'}</option>
+                {allProducts.map(p => (
+                  <option key={p.id} value={p.id}>{p.nameEn}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="text-white/40 text-xs block mb-1">{'\u1780\u17BC\u1793\u179F\u17C4 Card Keys (\u1798\u17BD\u1799\u1780\u17BC\u1793\u179F\u17C4\u1780\u17D2\u1793\u17BB\u1784\u1798\u17BD\u1799\u1794\u1793\u17D2\u1791\u17B6\u178F\u17CB)'}</label>
