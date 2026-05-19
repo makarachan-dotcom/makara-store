@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
     const key = await prisma.cardKey.findFirst({
       where: {
         keyCode: cardKey.trim(),
-        isSold: true,
       },
       include: {
         product: {
@@ -24,7 +23,19 @@ export async function POST(request: NextRequest) {
     if (!key) {
       return NextResponse.json({
         valid: false,
-        error: 'Card key not found or not yet activated',
+        error: 'Card key not found',
+      })
+    }
+
+    // Check if this key has already been redeemed (used in a topup task)
+    const existingTask = await prisma.topupTask.findFirst({
+      where: { cardKey: cardKey.trim() },
+    })
+
+    if (existingTask) {
+      return NextResponse.json({
+        valid: false,
+        error: 'Card key has already been redeemed',
       })
     }
 
