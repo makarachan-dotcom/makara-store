@@ -10,14 +10,14 @@ type UpgradeStep = 1 | 2 | 3 | 4
 
 const STEPS_KM = [
   { num: 1, label: 'ផ្ទៀងផ្ទាត់កូដ' },
-  { num: 2, label: 'ព័ត៌មានគណនី' },
+  { num: 2, label: 'Access Token' },
   { num: 3, label: 'បញ្ជាក់ការដំឡើង' },
   { num: 4, label: 'បើកដំណើរការ' },
 ]
 
 const STEPS_EN = [
   { num: 1, label: 'Verify Code' },
-  { num: 2, label: 'Account Info' },
+  { num: 2, label: 'Access Token' },
   { num: 3, label: 'Confirm' },
   { num: 4, label: 'Activate' },
 ]
@@ -49,7 +49,7 @@ export default function ChatGPTUpgradePage() {
   const [activeTab, setActiveTab] = useState<ServiceTab>('chatgpt')
   const [currentStep, setCurrentStep] = useState<UpgradeStep>(1)
   const [serialCode, setSerialCode] = useState('')
-  const [accountEmail, setAccountEmail] = useState('')
+  const [accessToken, setAccessToken] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showIntro, setShowIntro] = useState(true)
@@ -68,7 +68,7 @@ export default function ChatGPTUpgradePage() {
     setActiveTab(tab)
     setCurrentStep(1)
     setSerialCode('')
-    setAccountEmail('')
+    setAccessToken('')
     setIsCompleted(false)
     setVerifyResult(null)
     setVerifyError('')
@@ -123,7 +123,7 @@ export default function ChatGPTUpgradePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cardKey: serialCode.trim(),
-          accountEmail: accountEmail.trim() || undefined,
+          accessToken: accessToken.trim(),
         }),
       })
       const data = await res.json()
@@ -141,7 +141,7 @@ export default function ChatGPTUpgradePage() {
       )
       setIsProcessing(false)
     }
-  }, [activeTab, serialCode, accountEmail, locale])
+  }, [activeTab, serialCode, accessToken, locale])
 
   // Poll task status
   useEffect(() => {
@@ -166,27 +166,16 @@ export default function ChatGPTUpgradePage() {
       }
     }
 
-    // For QUEUED tasks, auto-mark as success after 5s since this is CDKEY delivery
-    // (the actual service upgrade happens externally)
-    const timer = setTimeout(() => {
-      if (!isCompleted) {
-        setIsCompleted(true)
-        setIsProcessing(false)
-        setTaskStatus('SUCCESS')
-      }
-    }, 5000)
-
     const interval = setInterval(poll, 3000)
     return () => {
       clearInterval(interval)
-      clearTimeout(timer)
     }
   }, [taskId, activeTab, isCompleted])
 
   const handleReset = useCallback(() => {
     setCurrentStep(1)
     setSerialCode('')
-    setAccountEmail('')
+    setAccessToken('')
     setIsCompleted(false)
     setIsProcessing(false)
     setVerifyResult(null)
@@ -417,29 +406,33 @@ export default function ChatGPTUpgradePage() {
 
               <h2 className="text-lg font-bold text-gray-900 mb-2">
                 {locale === 'km'
-                  ? 'បញ្ចូលព័ត៌មានគណនីគោលដៅ'
-                  : 'Enter Target Account Info'}
+                  ? 'បញ្ចូល Access Token គណនី'
+                  : 'Enter Your Access Token'}
               </h2>
               <p className="text-xs text-gray-500 mb-4">
                 {locale === 'km'
-                  ? `បញ្ចូលអ៊ីមែលគណនី ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} ដែលអ្នកចង់ដំឡើង។`
-                  : `Enter the ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} account email you want to upgrade.`}
+                  ? `បិទភ្ជាប់ Access Token គណនី ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} របស់អ្នក។ Token នេះត្រូវបានប្រើដើម្បីដំឡើងគណនីរបស់អ្នកដោយស្វ័យប្រវត្តិ។`
+                  : `Paste your ${activeTab === 'chatgpt' ? 'ChatGPT' : activeTab === 'claude' ? 'Claude' : 'Gemini'} Access Token. This token is used to automatically upgrade your account.`}
               </p>
               <div className="mb-4">
-                <input
-                  type="email"
-                  value={accountEmail}
-                  onChange={(e) => setAccountEmail(e.target.value)}
-                  placeholder={locale === 'km' ? 'អ៊ីមែលគណនីរបស់អ្នក...' : 'Your account email...'}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all"
+                <textarea
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  placeholder={locale === 'km'
+                    ? 'បិទភ្ជាប់ Access Token របស់អ្នកនៅទីនេះ (eyJhbGci...)'
+                    : 'Paste your valid Access Token here (eyJhbGci...)'}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-mono resize-none h-24 transition-all"
                 />
               </div>
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
-                <p className="text-xs text-blue-700 leading-relaxed">
-                  {locale === 'km'
-                    ? 'សូមប្រាកដថាអ្នកបានចូលគណនីនេះរួចហើយ។ ការដំឡើងនឹងត្រូវបានអនុវត្តលើគណនីនេះ។'
-                    : 'Make sure you are already logged into this account. The upgrade will be applied to this account.'}
+                <p className="text-xs text-blue-700 leading-relaxed font-medium mb-1">
+                  {locale === 'km' ? 'របៀបទទួល Access Token:' : 'How to get your Access Token:'}
                 </p>
+                <ol className="text-xs text-blue-600 leading-relaxed list-decimal list-inside space-y-1">
+                  <li>{locale === 'km' ? 'ចូលគណនី ChatGPT របស់អ្នកក្នុង browser' : 'Log in to your ChatGPT account in your browser'}</li>
+                  <li>{locale === 'km' ? 'ចូលទៅ: chat.openai.com/api/auth/session' : 'Go to: chat.openai.com/api/auth/session'}</li>
+                  <li>{locale === 'km' ? 'ចម្លងតម្លៃ "accessToken" ទាំងមូល' : 'Copy the entire "accessToken" value'}</li>
+                </ol>
               </div>
               <div className="flex gap-3">
                 <button
@@ -450,7 +443,7 @@ export default function ChatGPTUpgradePage() {
                 </button>
                 <button
                   onClick={() => setCurrentStep(3)}
-                  disabled={!accountEmail.trim()}
+                  disabled={!accessToken.trim()}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3.5 rounded-xl transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20 active:scale-[0.98]"
                 >
                   {locale === 'km' ? 'បន្ត' : 'Continue'}
@@ -498,9 +491,11 @@ export default function ChatGPTUpgradePage() {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                   <p className="text-xs text-gray-500 mb-1">
-                    {locale === 'km' ? 'គណនីគោលដៅ:' : 'Target Account:'}
+                    {locale === 'km' ? 'Access Token:' : 'Access Token:'}
                   </p>
-                  <p className="text-sm text-gray-900">{accountEmail}</p>
+                  <p className="text-sm font-mono text-gray-900 break-all">
+                    {accessToken.length > 30 ? accessToken.slice(0, 15) + '...' + accessToken.slice(-10) : accessToken}
+                  </p>
                 </div>
                 {verifyResult && (
                   <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
@@ -517,8 +512,8 @@ export default function ChatGPTUpgradePage() {
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                 <p className="text-xs text-amber-700 font-medium">
                   {locale === 'km'
-                    ? '⚠️ ព្រមាន: សូមពិនិត្យមើលគណនីគោលដorg If you press confirm, the card key will be bound to this account and cannot be reversed!'
-                    : '⚠️ Warning: Please verify the target account is correct. Once confirmed, the card key will be bound to that account and cannot be reversed!'}
+                    ? '⚠️ ព្រមាន: សូមពិនិត្យមើល Access Token ឱ្យបានត្រឹមត្រូវ។ បន្ទាប់ពីបញ្ជាក់ កូដ Card Key នឹងត្រូវបានចងភ្ជាប់ ហើយមិនអាចត្រឡប់វិញបានទេ!'
+                    : '⚠️ Warning: Please verify your Access Token is correct. Once confirmed, the card key will be bound and the upgrade will be executed. This cannot be reversed!'}
                 </p>
               </div>
 
@@ -626,7 +621,7 @@ export default function ChatGPTUpgradePage() {
                     </p>
                     <div className="space-y-1 text-xs text-green-700">
                       <p>Service: {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</p>
-                      <p>Account: {accountEmail}</p>
+                      <p>Token: {accessToken.length > 20 ? accessToken.slice(0, 10) + '...' + accessToken.slice(-6) : accessToken}</p>
                       <p>Status: Activated</p>
                     </div>
                   </div>

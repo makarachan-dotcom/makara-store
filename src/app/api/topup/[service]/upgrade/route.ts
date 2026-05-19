@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import {
+  validateAccessToken,
+  executeUpgrade,
+} from '@/lib/chatgpt-upgrade'
 
 const VALID_SERVICES = ['chatgpt', 'claude', 'gemini']
 
@@ -13,10 +17,17 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid service' }, { status: 400 })
     }
 
-    const { cardKey, accountEmail } = await request.json()
+    const { cardKey, accessToken } = await request.json()
 
     if (!cardKey) {
       return NextResponse.json({ error: 'Missing card key' }, { status: 400 })
+    }
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Missing access token. Please provide your ChatGPT Access Token.' },
+        { status: 400 }
+      )
     }
 
     // Verify card key exists
@@ -37,21 +48,57 @@ export async function POST(
       return NextResponse.json({ error: 'Card key has already been redeemed' }, { status: 400 })
     }
 
+    // Validate the access token before creating the task
+    const tokenCheck = await validateAccessToken(accessToken.trim())
+    if (!tokenCheck.valid) {
+      return NextResponse.json(
+        { error: tokenCheck.error || 'Invalid access token' },
+        { status: 400 }
+      )
+    }
+
     const serviceType = service.toUpperCase() as 'CHATGPT' | 'CLAUDE' | 'GEMINI'
 
+    // Create the task in PROCESSING state
     const task = await prisma.topupTask.create({
       data: {
         cardKey: cardKey.trim(),
         serviceType,
-        accountEmail: accountEmail || null,
-        taskStatus: 'QUEUED',
+        accessToken: accessToken.trim(),
+        accountEmail: tokenCheck.email || null,
+        taskStatus: 'PROCESSING',
       },
     })
 
+    // Execute the upgrade asynchronously
+    executeUpgrade(accessToken.trim(), serviceType)
+      .then(async (result) => {
+        await prisma.topupTask.update({
+          where: { id: task.id },
+          data: {
+            taskStatus: result.success ? 'SUCCESS' : 'FAILED',
+            resultMessage: result.message,
+            accountEmail: result.accountEmail || tokenCheck.email || null,
+            completedAt: new Date(),
+          },
+        })
+      })
+      .catch(async (err) => {
+        console.error('Upgrade execution error:', err)
+        await prisma.topupTask.update({
+          where: { id: task.id },
+          data: {
+            taskStatus: 'FAILED',
+            resultMessage: 'Unexpected error during upgrade execution.',
+            completedAt: new Date(),
+          },
+        })
+      })
+
     return NextResponse.json({
       taskId: task.id,
-      status: 'QUEUED',
-      message: `${service} upgrade task queued. Check status for updates.`,
+      status: 'PROCESSING',
+      message: `${service} upgrade initiated using access token. Validating and processing...`,
     })
   } catch (error) {
     console.error('Topup upgrade error:', error)
