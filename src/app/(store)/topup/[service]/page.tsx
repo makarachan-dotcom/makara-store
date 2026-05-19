@@ -27,7 +27,7 @@ export default function TopupServicePage() {
   const [verifying, setVerifying] = useState(false)
   const [verifyError, setVerifyError] = useState('')
 
-  const [accountEmail, setAccountEmail] = useState('')
+  const [accessToken, setAccessToken] = useState('')
   const [securityConfirmed, setSecurityConfirmed] = useState(false)
 
   const [taskStatus, setTaskStatus] = useState<TaskStatus>('idle')
@@ -69,7 +69,7 @@ export default function TopupServicePage() {
   }
 
   const handleSecurityCheck = () => {
-    if (!accountEmail.trim()) return
+    if (!accessToken.trim()) return
     setSecurityConfirmed(true)
     setStep('confirm')
   }
@@ -81,7 +81,7 @@ export default function TopupServicePage() {
       const res = await fetch(`/api/topup/${service}/upgrade`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cardKey: cardKey.trim(), accountEmail: accountEmail.trim() }),
+        body: JSON.stringify({ cardKey: cardKey.trim(), accessToken: accessToken.trim() }),
       })
       const data = await res.json()
       if (data.taskId) {
@@ -232,16 +232,15 @@ export default function TopupServicePage() {
               <span className="text-green-400 text-xs">{locale === 'km' ? 'Card Key \u178F\u17D2\u179A\u17B9\u1798\u178F\u17D2\u179A\u17BC\u179C!' : 'Card Key verified!'}</span>
             </div>
             <label className="block text-white/50 text-xs mb-2">
-              {locale === 'km' ? '\u17A2\u17CA\u17B8\u1798\u17C2\u179B\u1782\u178E\u1793\u17B8 ' + info.name : info.name + ' Account Email'}
+              {info.name + ' Access Token'}
             </label>
-            <input
-              type="email"
-              value={accountEmail}
-              onChange={e => setAccountEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full bg-obsidian-100 border border-white/10 rounded-lg px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-neon/50 focus:outline-none mb-4"
+            <textarea
+              value={accessToken}
+              onChange={e => setAccessToken(e.target.value)}
+              placeholder={locale === 'km' ? '\u1794\u17B7\u1791\u1797\u17D2\u1787\u17B6\u1794\u17CB Access Token \u179A\u1794\u179F\u17CB\u17A2\u17D2\u1793\u1780\u1793\u17C5\u1791\u17B8\u1793\u17C1\u17C7 (eyJhbGci...)' : 'Paste your valid Access Token here (eyJhbGci...)'}
+              className="w-full bg-obsidian-100 border border-white/10 rounded-lg px-4 py-3 text-white text-sm font-mono placeholder:text-white/20 focus:border-neon/50 focus:outline-none mb-4 resize-none h-20"
             />
-            <button onClick={handleSecurityCheck} disabled={!accountEmail.trim()}
+            <button onClick={handleSecurityCheck} disabled={!accessToken.trim()}
               className="w-full btn-gold py-3 text-sm font-bold disabled:opacity-50">
               {locale === 'km' ? '\u1794\u1793\u17D2\u178F \u2192' : 'Continue \u2192'}
             </button>
@@ -267,8 +266,8 @@ export default function TopupServicePage() {
                 <span className="text-white font-mono">{cardKey.slice(0, 4)}****{cardKey.slice(-4)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-white/40">{locale === 'km' ? '\u17A2\u17CA\u17B8\u1798\u17C2\u179B' : 'Email'}</span>
-                <span className="text-white">{accountEmail}</span>
+                <span className="text-white/40">Access Token</span>
+                <span className="text-white font-mono">{accessToken.length > 20 ? accessToken.slice(0, 10) + '...' + accessToken.slice(-6) : accessToken}</span>
               </div>
             </div>
             <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3 mb-4 text-xs text-yellow-400">

@@ -280,6 +280,7 @@ model TopupTask {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   cardKey         String
   serviceType     ServiceType
+  accessToken     String?
   accountEmail    String?
   taskStatus      TaskStatus  @default(QUEUED)
   resultMessage   String?
