@@ -36,14 +36,16 @@ export async function GET(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
     }
 
-    // Find card key if auto-delivered
+    // Find all delivered card keys
     let cardKey: string | null = null
+    let deliveredKeys: string[] = []
     if (order.status === 'COMPLETED') {
-      const deliveredKey = await prisma.cardKey.findFirst({
+      const keys = await prisma.cardKey.findMany({
         where: { orderId: order.id, isSold: true },
       })
-      if (deliveredKey) {
-        cardKey = deliveredKey.keyCode
+      if (keys.length > 0) {
+        deliveredKeys = keys.map((k) => k.keyCode)
+        cardKey = deliveredKeys[0]
       }
     }
 
@@ -65,6 +67,7 @@ export async function GET(
           unitPrice: item.price,
         })),
         cardKey,
+        deliveredKeys,
       },
     })
   } catch (error) {

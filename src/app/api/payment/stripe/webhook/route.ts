@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { sendTelegramNotification, formatNewOrderNotification } from '@/lib/telegram'
+import { handlePaymentVerified } from '@/lib/delivery'
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -24,54 +24,14 @@ export async function POST(request: NextRequest) {
       const orderId = paymentIntent.metadata.orderId
 
       if (orderId) {
-        const order = await prisma.order.update({
+        const order = await prisma.order.findUnique({
           where: { id: orderId },
-          data: {
-            status: 'PAYMENT_VERIFIED',
-            receiptStatus: 'ADMIN_APPROVED',
-            deliveryStatus: 'DELIVERING',
-          },
-          include: {
-            items: { include: { product: true } },
-          },
+          include: { items: { include: { product: true } } },
         })
 
-        // Auto-deliver card keys for AUTO delivery products
-        for (const item of order.items) {
-          if (item.product.deliveryType === 'AUTO') {
-            const keys = await prisma.cardKey.findMany({
-              where: {
-                productId: item.productId,
-                isSold: false,
-              },
-              take: item.quantity,
-            })
-
-            if (keys.length > 0) {
-              const keyIds = keys.map((k) => k.id)
-              const keyCodes = keys.map((k) => k.keyCode)
-
-              await prisma.cardKey.updateMany({
-                where: { id: { in: keyIds } },
-                data: { isSold: true, orderId: order.id, soldAt: new Date() },
-              })
-
-              await prisma.order.update({
-                where: { id: order.id },
-                data: {
-                  deliveredKeys: keyCodes,
-                  deliveryStatus: 'DELIVERED',
-                  status: 'COMPLETED',
-                },
-              })
-            }
-          }
+        if (order) {
+          await handlePaymentVerified(order, 'STRIPE')
         }
-
-        const productName = order.items[0]?.product.nameEn || 'Product'
-        await sendTelegramNotification(
-          formatNewOrderNotification(order.orderNumber, productName, order.totalAmount, 'STRIPE')
-        )
       }
     }
 
