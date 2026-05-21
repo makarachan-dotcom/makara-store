@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
-  validateAccessToken,
+  validateTokenFormat,
   executeUpgrade,
 } from '@/lib/chatgpt-upgrade'
 
@@ -48,11 +48,11 @@ export async function POST(
       return NextResponse.json({ error: 'Card key has already been redeemed' }, { status: 400 })
     }
 
-    // Validate the access token before creating the task
-    const tokenCheck = await validateAccessToken(accessToken.trim())
+    // Validate the access token format locally (JWT structure check)
+    const tokenCheck = validateTokenFormat(accessToken.trim())
     if (!tokenCheck.valid) {
       return NextResponse.json(
-        { error: tokenCheck.error || 'Invalid access token' },
+        { error: tokenCheck.error || 'Invalid access token format' },
         { status: 400 }
       )
     }
@@ -70,7 +70,7 @@ export async function POST(
       },
     })
 
-    // Execute the upgrade asynchronously
+    // Execute the upgrade asynchronously (real API calls happen here)
     executeUpgrade(accessToken.trim(), serviceType)
       .then(async (result) => {
         await prisma.topupTask.update({
